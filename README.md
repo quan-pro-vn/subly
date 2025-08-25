@@ -1,26 +1,31 @@
-# Full Stack Development Environment
 
-## Prerequisites
-- [Docker](https://www.docker.com/)
-- [docker-compose](https://docs.docker.com/compose/)
+# Docker Compose Setup
 
-## Building and Running
-Build and start the full stack:
+This repository provides a simple frontend, backend, and MySQL database that can be run together using Docker Compose.
 
-```sh
-docker compose up --build
-```
+## Services
 
-## Environment Variables
-These variables may be set in a `.env` file or exported in your shell before running the stack.
+- **frontend** – builds from `frontend/Dockerfile` and serves the web UI on port **80**. Requests to `/api` are proxied to the backend container.
+- **backend** – builds from `backend/Dockerfile` and exposes an API on port **8080**. It reads the `DATABASE_DSN` environment variable for the database connection.
+- **db** – MySQL instance used by the backend with credentials `gorm:gorm` and database `gorm`.
 
-- `VITE_BASE_URL` &ndash; base path used by the frontend during build time (defaults to `/`).
-- `FRONTEND_PORT` &ndash; port exposed for the frontend web server (defaults to `80`).
-- `BACKEND_PORT` &ndash; port exposed for the backend API (defaults to `8080`).
+All services share the `app-network` network so they can reach each other by container name.
 
-## Accessing the Services
-Once all containers are up:
+## Usage
 
-- Frontend: <http://localhost> (or <http://localhost:${FRONTEND_PORT}> if changed)
-- Backend API: <http://localhost:8080> (or <http://localhost:${BACKEND_PORT}> if changed)
+1. Ensure Docker and Docker Compose are installed.
+2. From the repository root, build and start the stack:
 
+   ```bash
+   docker compose up --build
+   ```
+
+   - Frontend available at http://localhost
+   - Backend API at http://localhost:8080
+   - Database exposed on port 3306 (connection DSN: `gorm:gorm@tcp(localhost:3306)/gorm?charset=utf8&parseTime=True&loc=Local`)
+
+3. To stop and remove the containers:
+
+   ```bash
+   docker compose down
+   ```
