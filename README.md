@@ -1,3 +1,4 @@
+
 # Docker Compose Setup
 
 This repository provides a simple frontend, backend, and MySQL database that can be run together using Docker Compose.
