@@ -8,20 +8,20 @@ const { BASE_URL } = import.meta.env;
 
 export function App() {
   return (
-    <BrowserRouter basename={BASE_URL}>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="light"
-        storageKey="vite-theme"
-        enableSystem
-        disableTransitionOnChange
-        enableColorScheme
-      >
-        <LoadingBarContainer>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="light"
+      storageKey="vite-theme"
+      enableSystem
+      disableTransitionOnChange
+      enableColorScheme
+    >
+      <LoadingBarContainer>
+        <BrowserRouter basename={BASE_URL}>
           <Toaster />
           <AppRouting />
-        </LoadingBarContainer>
-      </ThemeProvider>
-    </BrowserRouter>
+        </BrowserRouter>
+      </LoadingBarContainer>
+    </ThemeProvider>
   );
 }
