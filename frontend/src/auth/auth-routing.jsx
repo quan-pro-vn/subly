@@ -9,9 +9,17 @@ export function AuthRouting() {
       {authRoutes.map((route) => {
         const basePath = route.path?.replace('auth/', '') || '';
         return (
-          <Route key={basePath || 'root'} path={basePath} element={route.element}>
+          <Route
+            key={basePath || 'root'}
+            path={basePath}
+            element={route.element}
+          >
             {route.children?.map((child) => (
-              <Route key={child.path} path={child.path} element={child.element} />
+              <Route
+                key={child.path}
+                path={child.path}
+                element={child.element}
+              />
             ))}
           </Route>
         );

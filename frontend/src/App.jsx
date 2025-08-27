@@ -18,8 +18,8 @@ export function App() {
         enableColorScheme
       >
         <LoadingBarContainer>
-            <Toaster />
-            <AppRouting />
+          <Toaster />
+          <AppRouting />
         </LoadingBarContainer>
       </ThemeProvider>
     </BrowserRouter>

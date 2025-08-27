@@ -14,7 +14,7 @@ export function RequireAuth() {
 
   if (!token) {
     const next = encodeURIComponent(
-      location.pathname + location.search + location.hash
+      location.pathname + location.search + location.hash,
     );
     return <Navigate to={`/auth/login?next=${next}`} replace />;
   }

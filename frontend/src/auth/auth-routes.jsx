@@ -8,7 +8,6 @@ export const authRoutes = [
     children: [
       // /auth/login
       { path: 'login', element: <LoginPage /> },
-
     ],
   },
 ];

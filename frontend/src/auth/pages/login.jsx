@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   AlertCircle,
@@ -10,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-
+import { z } from 'zod';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -49,7 +48,7 @@ export default function LoginPage() {
 
     if (pwdReset === 'success') {
       setSuccessMessage(
-        'Mật khẩu đã được đặt lại. Bạn có thể đăng nhập bằng mật khẩu mới.'
+        'Mật khẩu đã được đặt lại. Bạn có thể đăng nhập bằng mật khẩu mới.',
       );
     }
 
@@ -69,17 +68,18 @@ export default function LoginPage() {
 
   // Gọi API login
   const handleLogin = async (values) => {
-    
     // Fake login cho demo
     if (
       values.email.trim().toLowerCase() === 'demo@kt.com' &&
       values.password === 'demo123'
     ) {
-      const storage = form.getValues('rememberMe') ? localStorage : sessionStorage;
+      const storage = form.getValues('rememberMe')
+        ? localStorage
+        : sessionStorage;
       storage.setItem('auth_token', 'demo-token-123456');
       storage.setItem(
         'auth_user',
-        JSON.stringify({ id: 1, email: 'demo@kt.com', name: 'Demo User' })
+        JSON.stringify({ id: 1, email: 'demo@kt.com', name: 'Demo User' }),
       );
       await new Promise((r) => setTimeout(r, 300));
       return;
@@ -138,7 +138,10 @@ export default function LoginPage() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="block w-full space-y-5">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="block w-full space-y-5"
+      >
         <div className="text-center space-y-1 pb-3">
           <h1 className="text-2xl font-semibold tracking-tight">Sign In</h1>
           <p className="text-sm text-muted-foreground">
@@ -151,12 +154,17 @@ export default function LoginPage() {
             <AlertCircle className="text-primary" />
           </AlertIcon>
           <AlertTitle className="text-accent-foreground">
-            Dùng <strong>demo@kt.com</strong> và <strong>demo123</strong> để thử nhanh.
+            Dùng <strong>demo@kt.com</strong> và <strong>demo123</strong> để thử
+            nhanh.
           </AlertTitle>
         </Alert>
 
         {error && (
-          <Alert variant="destructive" appearance="light" onClose={() => setError(null)}>
+          <Alert
+            variant="destructive"
+            appearance="light"
+            onClose={() => setError(null)}
+          >
             <AlertIcon>
               <AlertCircle />
             </AlertIcon>
@@ -180,7 +188,11 @@ export default function LoginPage() {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="Your email" autoComplete="email" {...field} />
+                <Input
+                  placeholder="Your email"
+                  autoComplete="email"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -229,7 +241,10 @@ export default function LoginPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
                   </FormControl>
                   <FormLabel className="text-sm font-normal cursor-pointer">
                     Remember me
@@ -258,7 +273,10 @@ export default function LoginPage() {
 
         <div className="text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{' '}
-          <Link to="/auth/signup" className="text-sm font-semibold text-foreground hover:text-primary">
+          <Link
+            to="/auth/signup"
+            className="text-sm font-semibold text-foreground hover:text-primary"
+          >
             Sign Up
           </Link>
         </div>
