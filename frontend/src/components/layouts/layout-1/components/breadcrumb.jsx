@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import { ChevronRight } from 'lucide-react';
-import { useLocation } from 'react-router';
+import { useLocation } from 'react-router-dom';
 import { MENU_SIDEBAR } from '@/config/layout-1.config';
 import { cn } from '@/lib/utils';
 import { useMenu } from '@/hooks/use-menu';
