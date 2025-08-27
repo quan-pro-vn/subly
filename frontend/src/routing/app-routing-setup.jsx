@@ -1,5 +1,5 @@
 import { Layout1Page } from '@/pages/layout-1/page';
-import { Route, Routes } from 'react-router';
+import { Route, Routes } from 'react-router-dom';
 import { Layout1 } from '@/components/layouts/layout-1';
 
 export function AppRoutingSetup() {
