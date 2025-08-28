@@ -1,76 +1,58 @@
 package main
 
 import (
-	"net/http"
+	"log"
 	"os"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
+
+	"metronic/internal/config"
+	"metronic/internal/database"
+	"metronic/internal/handler"
+	"metronic/internal/middleware"
+	"metronic/internal/repository"
+	"metronic/internal/security"
+	"metronic/internal/service"
 )
 
-type Item struct {
-	ID   uint   `gorm:"primaryKey"`
-	Name string `json:"name"`
-}
-
-var db *gorm.DB
-
-func initDB() {
-	var err error
-	dsn := os.Getenv("DATABASE_DSN")
-	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
-		panic("failed to connect database")
-	}
-	db.AutoMigrate(&Item{})
-}
-
-func createItem(c *gin.Context) {
-	var item Item
-	if err := c.ShouldBindJSON(&item); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	db.Create(&item)
-	c.JSON(http.StatusOK, item)
-}
-
-func getItems(c *gin.Context) {
-	var items []Item
-	db.Find(&items)
-	c.JSON(http.StatusOK, items)
-}
-
-func updateItem(c *gin.Context) {
-	id := c.Param("id")
-	var item Item
-	if err := db.First(&item, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "item not found"})
-		return
-	}
-	var input Item
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	item.Name = input.Name
-	db.Save(&item)
-	c.JSON(http.StatusOK, item)
-}
-
-func deleteItem(c *gin.Context) {
-	id := c.Param("id")
-	db.Delete(&Item{}, id)
-	c.Status(http.StatusNoContent)
-}
-
 func main() {
-	initDB()
-	r := gin.Default()
-	r.POST("/items", createItem)
-	r.GET("/items", getItems)
-	r.PUT("/items/:id", updateItem)
-	r.DELETE("/items/:id", deleteItem)
-	r.Run()
+	cfg := config.Load()
+
+	db, err := database.Connect(cfg.DBDSN)
+	if err != nil {
+		log.Fatalf("db connect: %v", err)
+	}
+
+	userRepo := repository.NewUserRepository(db)
+	tokenRepo := repository.NewRefreshTokenRepository(db)
+	jwt := security.NewJWTManager(cfg.JWTSecret, cfg.RefreshSecret, cfg.AccessTokenExpiry, cfg.RefreshTokenExpiry)
+	authService := service.NewAuthService(userRepo, tokenRepo, jwt)
+	authHandler := handler.NewAuthHandler(authService)
+
+	r := gin.New()
+	r.Use(gin.Logger(), gin.Recovery())
+	corsCfg := cors.Config{
+		AllowOrigins:     []string{cfg.ClientOrigin},
+		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowCredentials: true,
+	}
+	r.Use(cors.New(corsCfg))
+
+	authGroup := r.Group("/api/auth")
+	authGroup.Use(middleware.RateLimit(cfg.RateLimit))
+	authGroup.POST("/register", authHandler.Register)
+	authGroup.POST("/login", authHandler.Login)
+	authGroup.POST("/refresh", authHandler.Refresh)
+	authGroup.POST("/logout", authHandler.Logout)
+	authGroup.GET("/me", authHandler.Me)
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	if err := r.Run(":" + port); err != nil {
+		log.Fatalf("server: %v", err)
+	}
 }
