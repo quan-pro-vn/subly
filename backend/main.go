@@ -12,7 +12,6 @@ import (
 	"metronic/internal/handler"
 	"metronic/internal/middleware"
 	"metronic/internal/repository"
-	"metronic/internal/security"
 	"metronic/internal/service"
 )
 
@@ -25,9 +24,8 @@ func main() {
 	}
 
 	userRepo := repository.NewUserRepository(db)
-	tokenRepo := repository.NewRefreshTokenRepository(db)
-	jwt := security.NewJWTManager(cfg.JWTSecret, cfg.RefreshSecret, cfg.AccessTokenExpiry, cfg.RefreshTokenExpiry)
-	authService := service.NewAuthService(userRepo, tokenRepo, jwt)
+	tokenRepo := repository.NewTokenRepository(db)
+	authService := service.NewAuthService(userRepo, tokenRepo)
 	authHandler := handler.NewAuthHandler(authService)
 
 	r := gin.New()
@@ -45,8 +43,12 @@ func main() {
 	authGroup.POST("/register", authHandler.Register)
 	authGroup.POST("/login", authHandler.Login)
 	authGroup.POST("/refresh", authHandler.Refresh)
-	authGroup.POST("/logout", authHandler.Logout)
-	authGroup.GET("/me", authHandler.Me)
+
+	protected := authGroup.Group("")
+	protected.Use(middleware.Auth(tokenRepo))
+	protected.POST("/logout", authHandler.Logout)
+	protected.GET("/me", authHandler.Me)
+	protected.PATCH("/change-password", authHandler.ChangePassword)
 
 	port := os.Getenv("PORT")
 	if port == "" {

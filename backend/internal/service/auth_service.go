@@ -4,26 +4,25 @@ import (
 	"errors"
 	"time"
 
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	"metronic/internal/domain"
 	"metronic/internal/model"
 	"metronic/internal/repository"
 	"metronic/internal/security"
 )
 
-// AuthService provides authentication methods
+// AuthService provides authentication methods based on opaque tokens
 type AuthService struct {
 	users  *repository.UserRepository
-	tokens *repository.RefreshTokenRepository
-	jwt    *security.JWTManager
+	tokens domain.TokenRepository
 }
 
-func NewAuthService(u *repository.UserRepository, t *repository.RefreshTokenRepository, j *security.JWTManager) *AuthService {
-	return &AuthService{users: u, tokens: t, jwt: j}
+func NewAuthService(u *repository.UserRepository, t domain.TokenRepository) *AuthService {
+	return &AuthService{users: u, tokens: t}
 }
 
-// Register creates new user
+// Register creates a new user
 func (s *AuthService) Register(email, password string) error {
 	if _, err := s.users.FindByEmail(email); err == nil {
 		return errors.New("email already exists")
@@ -38,79 +37,91 @@ func (s *AuthService) Register(email, password string) error {
 	return s.users.Create(user)
 }
 
-// Login validates credentials and issues tokens
-func (s *AuthService) Login(email, password string) (string, string, error) {
+// Login validates credentials and issues a new token
+func (s *AuthService) Login(email, password, ip, ua string) (string, time.Time, *model.User, error) {
 	user, err := s.users.FindByEmail(email)
-	if err != nil {
-		return "", "", errors.New("invalid credentials")
+	if err != nil || !security.CheckPassword(user.Password, password) {
+		return "", time.Time{}, nil, errors.New("invalid credentials")
 	}
-	if !security.CheckPassword(user.Password, password) {
-		return "", "", errors.New("invalid credentials")
+	plain, hash, exp := security.GenerateToken()
+	token := &domain.Token{
+		UserID:    user.ID,
+		TokenHash: hash,
+		ExpiresAt: exp,
 	}
-	tokenID := uuid.NewString()
-	access, err := s.jwt.GenerateAccessToken(user.ID)
-	if err != nil {
-		return "", "", err
+	if ip != "" {
+		token.IP = &ip
 	}
-	refresh, err := s.jwt.GenerateRefreshToken(user.ID, tokenID)
-	if err != nil {
-		return "", "", err
+	if ua != "" {
+		token.UserAgent = &ua
 	}
-	rt := &model.RefreshToken{TokenID: tokenID, UserID: user.ID, ExpiresAt: time.Now().Add(s.jwt.RefreshTokenExp())}
-	if err := s.tokens.Create(rt); err != nil {
-		return "", "", err
+	if err := s.tokens.Create(token); err != nil {
+		return "", time.Time{}, nil, err
 	}
-	return access, refresh, nil
+	return plain, exp, user, nil
 }
 
-// Refresh rotates refresh token and returns new tokens
-func (s *AuthService) Refresh(tokenStr string) (string, string, error) {
-	userID, tokenID, err := s.jwt.VerifyRefreshToken(tokenStr)
+// Refresh rotates the token and issues a new one
+func (s *AuthService) Refresh(tokenStr, ip, ua string) (string, time.Time, *model.User, error) {
+	hash := security.HashToken(tokenStr)
+	stored, err := s.tokens.FindByHash(hash)
+	if err != nil || stored.Revoked || stored.ExpiresAt.Before(time.Now()) {
+		return "", time.Time{}, nil, errors.New("invalid token")
+	}
+	if err := s.tokens.RevokeByID(stored.ID); err != nil {
+		return "", time.Time{}, nil, err
+	}
+	user, err := s.users.FindByID(stored.UserID)
 	if err != nil {
-		return "", "", errors.New("invalid token")
+		return "", time.Time{}, nil, err
 	}
-	stored, err := s.tokens.Get(tokenID)
-	if err != nil || stored.UserID != userID || stored.ExpiresAt.Before(time.Now()) {
-		return "", "", errors.New("invalid token")
+	plain, newHash, exp := security.GenerateToken()
+	newToken := &domain.Token{
+		UserID:    stored.UserID,
+		TokenHash: newHash,
+		ExpiresAt: exp,
 	}
-	// delete old token
-	if err := s.tokens.Delete(tokenID); err != nil {
-		return "", "", err
+	if ip != "" {
+		newToken.IP = &ip
 	}
-	newID := uuid.NewString()
-	access, err := s.jwt.GenerateAccessToken(userID)
-	if err != nil {
-		return "", "", err
+	if ua != "" {
+		newToken.UserAgent = &ua
 	}
-	refresh, err := s.jwt.GenerateRefreshToken(userID, newID)
-	if err != nil {
-		return "", "", err
+	if err := s.tokens.Create(newToken); err != nil {
+		return "", time.Time{}, nil, err
 	}
-	rt := &model.RefreshToken{TokenID: newID, UserID: userID, ExpiresAt: time.Now().Add(s.jwt.RefreshTokenExp())}
-	if err := s.tokens.Create(rt); err != nil {
-		return "", "", err
-	}
-	return access, refresh, nil
+	return plain, exp, user, nil
 }
 
-// Logout removes refresh token
-func (s *AuthService) Logout(tokenStr string) error {
-	_, tokenID, err := s.jwt.VerifyRefreshToken(tokenStr)
-	if err != nil {
-		return errors.New("invalid token")
+// Logout revokes token or all tokens
+func (s *AuthService) Logout(tok *domain.Token, all bool) error {
+	if all {
+		return s.tokens.RevokeAllByUserID(tok.UserID)
 	}
-	return s.tokens.Delete(tokenID)
+	return s.tokens.RevokeByID(tok.ID)
 }
 
-// Me returns user info for the given access token
-func (s *AuthService) Me(tokenStr string) (*model.User, error) {
-	userID, err := s.jwt.VerifyAccessToken(tokenStr)
-	if err != nil {
-		return nil, errors.New("invalid token")
-	}
+// Me returns current user by ID
+func (s *AuthService) Me(userID uint) (*model.User, error) {
+	return s.users.FindByID(userID)
+}
+
+// ChangePassword updates user password and revokes all tokens
+func (s *AuthService) ChangePassword(userID uint, oldPwd, newPwd string) error {
 	user, err := s.users.FindByID(userID)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return user, nil
+	if !security.CheckPassword(user.Password, oldPwd) {
+		return errors.New("invalid credentials")
+	}
+	hash, err := security.HashPassword(newPwd)
+	if err != nil {
+		return err
+	}
+	user.Password = hash
+	if err := s.users.Update(user); err != nil {
+		return err
+	}
+	return s.tokens.RevokeAllByUserID(userID)
 }

@@ -4,6 +4,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
+	"metronic/internal/domain"
 	"metronic/internal/model"
 )
 
@@ -13,7 +14,7 @@ func Connect(dsn string) (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := db.AutoMigrate(&model.User{}, &model.RefreshToken{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &domain.Token{}); err != nil {
 		return nil, err
 	}
 	return db, nil

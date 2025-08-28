@@ -1,16 +1,14 @@
 module metronic
 
-go 1.22
+go 1.24.5
 
 require (
 	github.com/gin-contrib/cors v1.4.0
-	github.com/gin-gonic/gin v1.10.1
-	github.com/golang-jwt/jwt/v5 v5.2.0
-	github.com/google/uuid v1.5.0
-	github.com/joho/godotenv v1.5.1
-	golang.org/x/crypto v0.23.0
-	golang.org/x/time v0.5.0
-	gorm.io/driver/mysql v1.5.7
+        github.com/gin-gonic/gin v1.10.1
+        github.com/joho/godotenv v1.5.1
+        golang.org/x/crypto v0.23.0
+        golang.org/x/time v0.5.0
+        gorm.io/driver/mysql v1.5.7
 	gorm.io/gorm v1.25.7
 )
 
