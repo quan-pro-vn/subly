@@ -10,6 +10,7 @@ import {
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
+import { useAuth } from '@/providers/auth';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -22,9 +23,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
-const LOGIN_ENDPOINT = `${API_BASE_URL}/auth/login`;
 
 const signinSchema = z.object({
   email: z.string().email('Email không hợp lệ'),
@@ -59,67 +57,12 @@ export default function LoginPage() {
 
   const form = useForm({
     resolver: zodResolver(signinSchema),
-    defaultValues: {
-      email: 'demo@kt.com',
-      password: 'demo123',
-      rememberMe: true,
-    },
   });
 
-  // Gọi API login
+  const { signIn } = useAuth();
+
   const handleLogin = async (values) => {
-    // Fake login cho demo
-    if (
-      values.email.trim().toLowerCase() === 'demo@kt.com' &&
-      values.password === 'demo123'
-    ) {
-      const storage = form.getValues('rememberMe')
-        ? localStorage
-        : sessionStorage;
-      storage.setItem('auth_token', 'demo-token-123456');
-      storage.setItem(
-        'auth_user',
-        JSON.stringify({ id: 1, email: 'demo@kt.com', name: 'Demo User' }),
-      );
-      await new Promise((r) => setTimeout(r, 300));
-      return;
-    }
-
-    // Uncomment và sửa lại phần dưới để gọi API thật khi có backend
-    // const res = await fetch(LOGIN_ENDPOINT, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({
-    //     email: values.email,
-    //     password: values.password,
-    //   }),
-    // });
-
-    // if (!res.ok) {
-    //   let msg = 'Đăng nhập thất bại. Vui lòng kiểm tra lại.';
-    //   try {
-    //     const data = await res.json();
-    //     if (data?.message) msg = data.message;
-    //     if (Array.isArray(data?.errors)) msg = data.errors.join(', ');
-    //   } catch {
-    //     /* noop */
-    //   }
-    //   throw new Error(msg);
-    // }
-
-    // const data = await res.json();
-    // const accessToken = data.access_token || data.token || data.accessToken;
-
-    // if (!accessToken) {
-    //   throw new Error('Phản hồi không chứa access token.');
-    // }
-
-    // const storage = form.getValues('rememberMe') ? localStorage : sessionStorage;
-    // storage.setItem('auth_token', accessToken);
-
-    // if (data.user) {
-    //   storage.setItem('auth_user', JSON.stringify(data.user));
-    // }
+    await signIn(values.email, values.password);
   };
 
   async function onSubmit(values) {
@@ -148,16 +91,6 @@ export default function LoginPage() {
             Welcome back! Log in with your credentials.
           </p>
         </div>
-
-        <Alert appearance="light" size="sm" close={false}>
-          <AlertIcon>
-            <AlertCircle className="text-primary" />
-          </AlertIcon>
-          <AlertTitle className="text-accent-foreground">
-            Dùng <strong>demo@kt.com</strong> và <strong>demo123</strong> để thử
-            nhanh.
-          </AlertTitle>
-        </Alert>
 
         {error && (
           <Alert
@@ -274,7 +207,7 @@ export default function LoginPage() {
         <div className="text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{' '}
           <Link
-            to="/auth/signup"
+            to="/auth/register"
             className="text-sm font-semibold text-foreground hover:text-primary"
           >
             Sign Up

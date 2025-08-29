@@ -5,7 +5,7 @@ FROM node:${NODE_VERSION} AS build
 WORKDIR /frontend
 
 COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+RUN yarn install
 
 COPY . .
 RUN yarn build

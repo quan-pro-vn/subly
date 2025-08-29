@@ -13,8 +13,9 @@ import {
   Users,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toAbsoluteUrl } from '@/lib/helpers';
+import { useAuth } from '@/providers/auth';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -61,6 +62,8 @@ const I18N_LANGUAGES = [
 export function UserDropdownMenu({ trigger }) {
   const currenLanguage = I18N_LANGUAGES[0];
   const { theme, setTheme } = useTheme();
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
 
   const handleThemeToggle = (checked) => {
     setTheme(checked ? 'dark' : 'light');
@@ -229,7 +232,15 @@ export function UserDropdownMenu({ trigger }) {
           </div>
         </DropdownMenuItem>
         <div className="p-2 mt-1">
-          <Button variant="outline" size="sm" className="w-full">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={async () => {
+              await signOut();
+              navigate('/auth/login');
+            }}
+          >
             Logout
           </Button>
         </div>

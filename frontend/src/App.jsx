@@ -1,10 +1,9 @@
-import { AppRouting } from '@/routing/app-routing';
+import { AppRouting } from '@/routes/app-routing';
 import { ThemeProvider } from 'next-themes';
 import { BrowserRouter } from 'react-router-dom';
 import { LoadingBarContainer } from 'react-top-loading-bar';
+import { AuthProvider } from '@/providers/auth';
 import { Toaster } from '@/components/ui/sonner';
-
-const { BASE_URL } = import.meta.env;
 
 export function App() {
   return (
@@ -17,9 +16,11 @@ export function App() {
       enableColorScheme
     >
       <LoadingBarContainer>
-        <BrowserRouter basename={BASE_URL}>
-          <Toaster />
-          <AppRouting />
+        <BrowserRouter>
+          <AuthProvider>
+            <Toaster />
+            <AppRouting />
+          </AuthProvider>
         </BrowserRouter>
       </LoadingBarContainer>
     </ThemeProvider>
