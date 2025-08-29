@@ -1,33 +1,38 @@
 # Hạ tầng & Vận hành (infra)
 
-Tài liệu mô tả kiến trúc, biến môi trường, mạng Docker, quy trình build/run, giám sát và sao lưu cho dự án này.
+Tài liệu mô tả kiến trúc dịch vụ, biến môi trường, mạng Docker, quy trình build/run, reverse proxy, sao lưu và xử lý sự cố cho dự án này.
 
 ## Kiến trúc
-- **frontend**: Ứng dụng React build bằng Vite, phục vụ bởi `nginx` (container lắng nghe cổng nội bộ `80`). Proxy các yêu cầu `/api` tới backend qua mạng nội bộ Docker.
-- **backend**: API viết bằng Go (Gin) lắng nghe `:8080`. Đọc cấu hình DB từ `DATABASE_DSN`. Tự động migrate schema bằng GORM khi khởi động.
-- **db**: MySQL 8.0, dữ liệu lưu vào volume `db-data`. Có healthcheck đảm bảo sẵn sàng trước khi backend khởi động.
-- **Mạng**: Tất cả service tham gia vào mạng Docker ngoài `tinker-net` (external). Dùng để tích hợp với reverse proxy/nginx bên ngoài stack.
+- frontend: React (Vite) build sẵn, phục vụ bởi nginx nội bộ container (cổng 80). Proxy mọi yêu cầu có tiền tố `/api` sang backend qua mạng Docker.
+- backend: Go (Gin) lắng nghe `:8080`. Đọc DSN từ `DATABASE_DSN`. Tự động migrate schema với GORM khi khởi động.
+- db: MySQL 8.0, dữ liệu lưu ở volume `db-data`, có healthcheck trước khi backend khởi chạy.
+- Mạng: Tất cả container tham gia mạng ngoài `tinker-net` (Compose `external: true`) để dùng chung với reverse proxy của hệ thống.
 
-Sơ đồ lưu thông: `Client → (Reverse Proxy) → frontend (nginx) → /api → backend → db`.
+Luồng truy cập: Client → (Reverse Proxy) → frontend (nginx) → /api → backend → db.
 
 ## Yêu cầu hệ thống
 - Docker 24+ và Docker Compose v2.
-- Đã tạo mạng ngoài cho Compose: `docker network create tinker-net` (chạy một lần trên host).
+- Mạng ngoài cho stack: chạy một lần `docker network create tinker-net` trên host.
+
+## Endpoint sức khỏe
+- `GET /ping`: backend trả `{ "message": "pong" }`.
+- `GET /api/health`: trả `{ "status": "ok" }` khi router auth được mount.
 
 ## Biến môi trường
-- `DATABASE_DSN`: DSN MySQL cho backend. Mặc định trong `docker-compose.yml` là `gorm:gorm@tcp(db:3306)/gorm?charset=utf8&parseTime=True&loc=Local`.
-- `AUTH_RATE_LIMIT` (tùy chọn): Giới hạn request/phút mỗi IP cho các route auth. Mặc định `5`.
-- `CLIENT_ORIGIN` (tùy chọn): Nguồn CORS phía client, mặc định `*`.
-- File `.env` ở root có thể chứa các port gợi ý cho môi trường dev (`BACKEND_PORT`, `FRONTEND_PORT`, `DB_PORT`) nhưng hiện đang không được publish trong `docker-compose.yml` (để sẵn sàng cho mô hình reverse proxy).
+- `DATABASE_DSN`: DSN MySQL cho backend. Mặc định trong `docker-compose.yml`: `gorm:gorm@tcp(db:3306)/gorm?charset=utf8&parseTime=True&loc=Local`.
+- `CLIENT_ORIGIN` (tùy chọn): Origin cho CORS, mặc định `*` (đang bật AllowAllOrigins trong backend).
+- `AUTH_RATE_LIMIT` (tùy chọn): Số request/phút mỗi IP. Middleware có sẵn nhưng CHƯA bật mặc định trên các route; chỉ hiệu lực nếu được gắn vào router trong code.
+- `.env` ở root có thể ghi các cổng dev (`BACKEND_PORT`, `FRONTEND_PORT`, `DB_PORT`) khi dùng override để publish port ra ngoài.
+- Frontend `.env`: `VITE_APP_NAME`, `VITE_APP_VERSION` dùng lúc build giao diện.
 
-## Chạy cục bộ (2 lựa chọn)
-- **A. Cùng reverse proxy nội bộ (khuyên dùng production/dev đồng nhất)**
-  - Tạo mạng `tinker-net` nếu chưa có: `docker network create tinker-net`.
+## Chạy cục bộ
+- Phương án A – Reverse proxy nội bộ (khuyến nghị đồng nhất với production)
+  - Tạo mạng: `docker network create tinker-net` (nếu chưa có).
   - Khởi chạy: `docker compose up -d --build`.
-  - Truy cập thông qua reverse proxy của bạn (ví dụ Nginx Proxy Manager, Traefik) trỏ vào `frontend:80` trên mạng `tinker-net`.
+  - Trỏ reverse proxy (Nginx/Traefik/NGPM) đến `frontend:80` trên mạng `tinker-net`.
 
-- **B. Mở port trực tiếp (dev nhanh)**
-  - Tạo file `docker-compose.override.yml` (không commit nếu không cần):
+- Phương án B – Mở port trực tiếp (dev nhanh)
+  - Tạo `docker-compose.override.yml` (không bắt buộc commit):
     ```yaml
     services:
       frontend:
@@ -41,12 +46,12 @@ Sơ đồ lưu thông: `Client → (Reverse Proxy) → frontend (nginx) → /api
           - "${DB_PORT:-3307}:3306"
     ```
   - Chạy: `docker compose up -d --build` và truy cập:
-    - Frontend: `http://localhost:${FRONTEND_PORT}`
-    - Backend: `http://localhost:${BACKEND_PORT}`
-    - MySQL: `localhost:${DB_PORT}` (user: `gorm`, pass: `gorm`, db: `gorm`)
+    - Frontend: http://localhost:${FRONTEND_PORT}
+    - Backend: http://localhost:${BACKEND_PORT}
+    - MySQL: localhost:${DB_PORT} (user: gorm, pass: gorm, db: gorm)
 
 ## Reverse proxy mẫu (nginx)
-Ví dụ cấu hình server cho domain `quanlv.tinker.vn` khi reverse proxy cùng mạng Docker `tinker-net`:
+Ví dụ khi reverse proxy cùng mạng Docker `tinker-net` cho domain `quanlv.tinker.vn`:
 ```nginx
 upstream app_frontend { server frontend:80; }
 server {
@@ -54,19 +59,19 @@ server {
   location / { proxy_pass http://app_frontend; }
 }
 ```
-Lưu ý: proxy tới `frontend:80`. Tuyến `/api` đã được `frontend/nginx.conf` proxy nội bộ sang `backend:8080`.
+Lưu ý: Proxy tới `frontend:80`. Tuyến `/api` đã được `frontend/nginx.conf` chuyển tiếp sang `backend:8080` nội bộ.
 
-## Dữ liệu & Migration
-- Backend tự `AutoMigrate` các bảng (Users, Tokens) lúc khởi động (xem `backend/internal/database/database.go`).
-- Dữ liệu MySQL nằm trong volume `db-data`.
+## Dữ liệu & migration
+- Backend gọi AutoMigrate cho bảng Users và Tokens (xem `backend/internal/database/database.go`).
+- Dữ liệu MySQL lưu tại volume `db-data` (được khai báo trong Compose).
 
-## Sao lưu/Phục hồi MySQL
-- Sao lưu:
+## Sao lưu / Phục hồi MySQL
+- Sao lưu toàn bộ DB `gorm`:
   - `docker compose exec db sh -c 'mysqldump -u root -p"$MYSQL_ROOT_PASSWORD" gorm' > backup.sql`
-- Phục hồi (xóa/ghi đè DB `gorm`):
+- Phục hồi (ghi đè DB `gorm`):
   - `docker compose exec -T db sh -c 'mysql -u root -p"$MYSQL_ROOT_PASSWORD" gorm' < backup.sql`
 
-## Vận hành
+## Vận hành thường ngày
 - Build & chạy: `make build` hoặc `docker compose up -d --build`.
 - Dừng: `docker compose down`.
 - Nhật ký:
@@ -75,12 +80,22 @@ Lưu ý: proxy tới `frontend:80`. Tuyến `/api` đã được `frontend/nginx
   - DB: `docker compose logs -f db`
 - Kiểm tra health DB: `docker inspect --format='{{json .State.Health}}' $(docker compose ps -q db)`
 
-## Bảo mật & Best practices
-- Không commit file `.env` chứa thông tin nhạy cảm.
-- Xoay vòng mật khẩu DB/secret định kỳ; dùng biến môi trường bí mật khi deploy CI/CD.
-- Hạn chế publish port ra internet; ưu tiên reverse proxy có TLS (Let's Encrypt) và tường lửa.
-- Sao lưu định kỳ volume `db-data` và giữ snapshot ngoài máy chủ.
+## Triển khai & mở rộng
+- Kết nối reverse proxy có TLS (Let's Encrypt) vào `frontend:80` trên mạng `tinker-net`.
+- Có thể scale frontend/backend (stateless) cho mục đích đọc/CPU:
+  - Ví dụ: `docker compose up -d --scale frontend=2 --no-recreate`.
+  - Lưu ý: Cần reverse proxy cân bằng tải theo container.
+
+## Bảo mật
+- Không commit `.env` có bí mật; dùng secret của CI/CD hoặc biến env trên host.
+- Hạn chế publish port; ưu tiên expose qua reverse proxy có TLS + firewall.
+- Sao lưu định kỳ volume `db-data` và lưu bản sao ngoại vi (offsite).
 
 ## Khác biệt với README.md
-`README.md` mô tả mạng `app-network` và publish port. Cấu hình thực tế trong repo dùng mạng ngoài `tinker-net` và không publish port mặc định. Dùng phần “Chạy cục bộ” bên trên để chọn mô hình phù hợp.
+- `README.md` mô tả mạng `app-network` và publish port mặc định. Cấu hình hiện tại dùng mạng ngoài `tinker-net` và không publish port (phù hợp khi chạy sau reverse proxy). Dùng phần “Chạy cục bộ” để chọn mô hình phù hợp.
 
+## Xử lý sự cố (Troubleshooting)
+- Frontend/Backend không truy cập được tên service: Kiểm tra mạng `tinker-net` đã tồn tại và các container đã gắn vào: `docker network inspect tinker-net`.
+- Backend không kết nối được MySQL: Chờ DB healthy; xem log `docker compose logs -f db`. Kiểm tra `DATABASE_DSN` đúng host `db:3306` trong mạng Docker.
+- 502 từ reverse proxy: Kiểm tra reverse proxy có join mạng `tinker-net` và upstream trỏ `frontend:80` đúng tên dịch vụ Compose.
+- Cổng dev không lên khi dùng override: Đảm bảo giá trị trong `.env` root không bị trùng port đang dùng trên host.
