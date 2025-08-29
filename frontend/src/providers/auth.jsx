@@ -11,10 +11,6 @@ export function AuthProvider({ children }) {
     const data = await api.login(email, password);
     setToken(data.access_token);
     localStorage.setItem('auth_token', data.access_token);
-    if (data.user) {
-      setCurrentUser(data.user);
-      localStorage.setItem('auth_user', JSON.stringify(data.user));
-    }
   };
 
   const signUp = async (email, password) => {
@@ -30,7 +26,6 @@ export function AuthProvider({ children }) {
     setToken(null);
     setCurrentUser(null);
     localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_user');
   };
 
   const restore = async () => {
@@ -40,7 +35,6 @@ export function AuthProvider({ children }) {
       try {
         const u = await api.getMe();
         setCurrentUser(u);
-        localStorage.setItem('auth_user', JSON.stringify(u));
       } catch {
         localStorage.removeItem('auth_token');
       }

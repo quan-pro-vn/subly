@@ -1,7 +1,20 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { authRoutes } from './auth-routes';
+import { getToken } from './utils/auth';
 
 export function AuthRouting() {
+  const location = useLocation();
+  const token = getToken();
+
+  if (token) {
+    const next = new URLSearchParams(location.search).get('next');
+    const safeNext =
+      next && !next.startsWith('/auth')
+        ? decodeURIComponent(next)
+        : '/layout-1';
+    return <Navigate to={safeNext} replace />;
+  }
+
   return (
     <Routes>
       <Route index element={<Navigate to="login" replace />} />

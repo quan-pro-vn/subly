@@ -1,5 +1,5 @@
+import { RequireAuth } from '@/auth/require-auth';
 import { Layout1Page } from '@/pages/layout-1/page';
-import { RequireAuth } from '@/routes/require-auth';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Layout1 } from '@/components/layouts/layout-1';
 import { AuthRouting } from '../auth/auth-routing';

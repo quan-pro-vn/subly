@@ -1,12 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-
-function getToken() {
-  return (
-    localStorage.getItem('auth_token') ||
-    sessionStorage.getItem('auth_token') ||
-    null
-  );
-}
+import { getToken } from './utils/auth';
 
 export function RequireAuth() {
   const location = useLocation();
