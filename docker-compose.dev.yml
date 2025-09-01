@@ -1,0 +1,10 @@
+services:
+  frontend:
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+
+  backend:
+    # Uncomment if you want backend accessible from host in dev
+    # ports:
+    #   - "${BACKEND_PORT:-8081}:8080"
+
