@@ -16,8 +16,7 @@ const Toaster = ({ ...props }) => {
       className="toaster"
       toastOptions={{
         classNames: {
-          toast:
-            'rounded-md border shadow-lg text-sm',
+          toast: 'rounded-md border shadow-lg text-sm',
           description: 'opacity-90',
           actionButton: 'rounded-md px-3 py-1',
           cancelButton: 'rounded-md px-3 py-1',

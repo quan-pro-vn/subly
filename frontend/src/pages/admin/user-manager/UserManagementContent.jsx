@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
+import {
+  deleteUser as apiDeleteUser,
+  updateUser as apiUpdateUser,
+  listUsers,
+} from '@/api/users';
 import { toast } from 'sonner';
-import { listUsers, deleteUser as apiDeleteUser, updateUser as apiUpdateUser } from '@/api/users';
-import { getMe } from '@/api/auth';
+import { useAuth } from '@/providers/auth';
 import UserModal from './UserModal';
 
 const UserManagementContent = ({ refreshKey = 0 }) => {
@@ -27,7 +31,7 @@ const UserManagementContent = ({ refreshKey = 0 }) => {
   // refetch list theo refreshKey
   useEffect(() => {
     fetchUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [refreshKey]);
 
   const startEdit = (u) => setEditing(u);
@@ -41,7 +45,9 @@ const UserManagementContent = ({ refreshKey = 0 }) => {
       toast.success('Cập nhật thành công', { richColors: true });
       cancelEdit();
     } catch (e) {
-      toast.error(e?.response?.data?.error || 'Cập nhật thất bại', { richColors: true });
+      toast.error(e?.response?.data?.error || 'Cập nhật thất bại', {
+        richColors: true,
+      });
     }
   };
 
@@ -52,7 +58,9 @@ const UserManagementContent = ({ refreshKey = 0 }) => {
       setUsers((prev) => prev.filter((u) => u.id !== id));
       toast.success('Đã xóa người dùng', { richColors: true });
     } catch (e) {
-      toast.error(e?.response?.data?.error || 'Xóa thất bại', { richColors: true });
+      toast.error(e?.response?.data?.error || 'Xóa thất bại', {
+        richColors: true,
+      });
     }
   };
 

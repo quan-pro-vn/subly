@@ -1,4 +1,5 @@
 import { Fragment, useState } from 'react';
+import { createUser } from '@/api/users';
 import { toast } from 'sonner';
 import { Container } from '@/components/common/container';
 import {
@@ -8,9 +9,7 @@ import {
   ToolbarHeading,
   ToolbarPageTitle,
 } from '@/components/layouts/layout-1/components/toolbar';
-
 import { UserManagementContent } from './UserManagementContent';
-import { createUser } from '@/api/users';
 import UserModal from './UserModal';
 
 export const UserManagementPage = () => {
@@ -45,7 +44,11 @@ export const UserManagementPage = () => {
             </ToolbarDescription>
           </ToolbarHeading>
           <ToolbarActions>
-            <button type="button" onClick={openCreate} className="btn btn-sm btn-primary">
+            <button
+              type="button"
+              onClick={openCreate}
+              className="btn btn-sm btn-primary"
+            >
               Tạo nhân viên
             </button>
           </ToolbarActions>

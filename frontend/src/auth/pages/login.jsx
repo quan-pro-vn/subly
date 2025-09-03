@@ -73,7 +73,9 @@ export default function LoginPage() {
       const nextPath = searchParams.get('next') || '/layout-1';
       navigate(nextPath, { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra.');
+      setError(
+        err instanceof Error ? err.response?.data?.error : 'Có lỗi xảy ra.',
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -204,7 +206,7 @@ export default function LoginPage() {
           )}
         </Button>
 
-        <div className="text-center text-sm text-muted-foreground">
+        <div className="mt-6 text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{' '}
           <Link
             to="/auth/register"

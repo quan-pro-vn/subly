@@ -19,4 +19,3 @@ export function updateUser(id, payload) {
 export function deleteUser(id) {
   return http.delete(`/users/${id}`);
 }
-
