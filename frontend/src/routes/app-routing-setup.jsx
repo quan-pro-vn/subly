@@ -13,7 +13,7 @@ export function AppRoutingSetup() {
         <Route element={<Layout1 />}>
           <Route path="/layout-1" element={<Layout1Page />} />
           <Route path="/layout-1/dark-sidebar" element={<Layout1Page />} />
-          <Route path="user-management" element={<UserManagementPage />} />
+          <Route path="/user-management" element={<UserManagementPage />} />
         </Route>
       </Route>
       <Route path="auth/*" element={<AuthRouting />} />
