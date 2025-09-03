@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { LoadingBarContainer } from 'react-top-loading-bar';
 import { AuthProvider } from '@/providers/auth';
 import { Toaster } from '@/components/ui/sonner';
+import { SettingsProvider } from './providers/settings-provider';
 
 export function App() {
   return (
@@ -18,8 +19,10 @@ export function App() {
       <LoadingBarContainer>
         <BrowserRouter>
           <AuthProvider>
-            <Toaster />
-            <AppRouting />
+            <SettingsProvider>
+              <Toaster />
+              <AppRouting />
+            </SettingsProvider>
           </AuthProvider>
         </BrowserRouter>
       </LoadingBarContainer>

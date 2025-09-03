@@ -10,16 +10,41 @@ const Toaster = ({ ...props }) => {
   return (
     <Sonner
       theme={theme}
-      className="group toaster [&_[data-type=success]>[data-icon]]:text-success [&_[data-type=success]_[data-title]]:text-success [&_[data-type=info]_[data-title]]:text-info [&_[data-type=error]>[data-icon]]:text-destructive [&_[data-type=error]_[data-title]]:text-destructive"
+      richColors
+      position="top-right"
+      closeButton
+      className="toaster"
       toastOptions={{
         classNames: {
           toast:
-            'group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground! group-[.toaster]:border-border group-[.toaster]:shadow-lg has-[[role=alert]]:border-0! has-[[role=alert]]:shadow-none! has-[[role=alert]]:bg-transparent!',
-          description: 'group-[.toast]:text-muted-foreground',
-          actionButton:
-            'group-[.toast]:rounded-md! group-[.toast]:bg-primary group-[.toast]:text-primary-foreground!',
-          cancelButton:
-            'group-[.toast]:rounded-md! group-[.toast]:bg-secondary group-[.toast]:text-secondary-foreground!',
+            'rounded-md border shadow-lg text-sm',
+          description: 'opacity-90',
+          actionButton: 'rounded-md px-3 py-1',
+          cancelButton: 'rounded-md px-3 py-1',
+        },
+        success: {
+          classNames: {
+            toast: 'border-green-500 bg-green-50 text-green-700',
+            description: 'text-green-600',
+          },
+        },
+        error: {
+          classNames: {
+            toast: 'border-red-500 bg-red-50 text-red-700',
+            description: 'text-red-600',
+          },
+        },
+        info: {
+          classNames: {
+            toast: 'border-blue-500 bg-blue-50 text-blue-700',
+            description: 'text-blue-600',
+          },
+        },
+        warning: {
+          classNames: {
+            toast: 'border-yellow-500 bg-yellow-50 text-yellow-800',
+            description: 'text-yellow-700',
+          },
         },
       }}
       {...props}
