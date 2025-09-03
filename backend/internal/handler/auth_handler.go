@@ -52,12 +52,18 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 	ttl := int(time.Until(exp).Seconds())
+	headers := map[string]string{
+		"Origin":     c.GetHeader("Origin"),
+		"Referer":    c.GetHeader("Referer"),
+		"User-Agent": c.GetHeader("User-Agent"),
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"access_token":       token,
 		"access_expires_in":  ttl,
 		"refresh_token":      token,
 		"refresh_expires_in": ttl,
 		"user":               user,
+		"headers":            headers,
 	})
 }
 
