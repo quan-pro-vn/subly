@@ -15,6 +15,8 @@ type UserService struct {
     users *repository.UserRepository
 }
 
+var ErrDeleteSelf = errors.New("cannot delete current user")
+
 func NewUserService(u *repository.UserRepository) *UserService {
     return &UserService{users: u}
 }
@@ -79,7 +81,10 @@ func (s *UserService) Update(id uint, name, email, password string) (*model.User
 }
 
 // Delete removes user by ID
-func (s *UserService) Delete(id uint) error {
-    return s.users.DeleteByID(id)
+func (s *UserService) Delete(id, currentID uint) error {
+	if id == currentID {
+		return ErrDeleteSelf
+	}
+	return s.users.DeleteByID(id)
 }
 
