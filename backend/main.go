@@ -32,14 +32,20 @@ func main() {
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 
-	r := gin.Default()
-	r.Use(cors.New(cors.Config{
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
-		AllowHeaders:     []string{"*"},
-		AllowCredentials: false,
-		MaxAge:           12 * time.Hour,
-		AllowAllOrigins:  true,
-	}))
+    r := gin.Default()
+    corsCfg := cors.Config{
+        AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
+        AllowHeaders:     []string{"Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"},
+        AllowCredentials: false,
+        MaxAge:           12 * time.Hour,
+        AllowAllOrigins:  true,
+    }
+    // If a specific origin is provided, use it instead of wildcard
+    if cfg.ClientOrigin != "" && cfg.ClientOrigin != "*" {
+        corsCfg.AllowAllOrigins = false
+        corsCfg.AllowOrigins = []string{cfg.ClientOrigin}
+    }
+    r.Use(cors.New(corsCfg))
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "pong"})

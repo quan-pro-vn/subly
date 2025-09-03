@@ -41,7 +41,7 @@ func Auth(tokens domain.TokenRepository) gin.HandlerFunc {
         c.Set("userID", tok.UserID)
         c.Set("token", tok)
         // update last used info asynchronously (ignore error)
-        _ = tokens.UpdateUsage(tok.ID, c.ClientIP(), c.GetHeader("User-Agent"), time.Now())
+        go func() { _ = tokens.UpdateUsage(tok.ID, c.ClientIP(), c.GetHeader("User-Agent"), time.Now()) }()
         c.Next()
     }
 }
