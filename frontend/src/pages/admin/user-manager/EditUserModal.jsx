@@ -68,7 +68,7 @@ const EditUserModal = ({ user, onClose, onSave }) => {
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-4">
-          <button className="btn btn-ghost" onClick={onClose} disabled={saving}>Hủy</button>
+          <button className="btn btn-outline border border-gray-400" onClick={onClose} disabled={saving}>Hủy</button>
           <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? 'Đang lưu...' : 'Lưu'}
           </button>
