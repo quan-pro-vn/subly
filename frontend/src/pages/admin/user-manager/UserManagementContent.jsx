@@ -3,7 +3,7 @@ import { listUsers, deleteUser as apiDeleteUser, updateUser as apiUpdateUser } f
 import EditUserModal from './EditUserModal';
 import { getMe } from '../../../api/auth';
 
-const UserManagementContent = () => {
+const UserManagementContent = ({ refreshKey = 0 }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -38,7 +38,7 @@ const UserManagementContent = () => {
   useEffect(() => {
     fetchMe();
     fetchUsers();
-  }, []);
+  }, [refreshKey]);
 
   const startEdit = (u) => setEditing(u);
 
