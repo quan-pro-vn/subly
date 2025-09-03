@@ -32,26 +32,20 @@ func main() {
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 
-    r := gin.Default()
-    corsCfg := cors.Config{
-        AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
-        AllowHeaders:     []string{"Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"},
-        AllowCredentials: false,
-        MaxAge:           12 * time.Hour,
-        AllowAllOrigins:  true,
-    }
-    // If a specific origin is provided, use it instead of wildcard
-    if cfg.ClientOrigin != "" && cfg.ClientOrigin != "*" {
-        corsCfg.AllowAllOrigins = false
-        corsCfg.AllowOrigins = []string{cfg.ClientOrigin}
-    }
-    r.Use(cors.New(corsCfg))
+	r := gin.Default()
+	r.Use(cors.New(cors.Config{
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
+		AllowHeaders:     []string{"*"},
+		AllowCredentials: false,
+		MaxAge:           12 * time.Hour,
+		AllowAllOrigins:  true,
+	}))
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "pong"})
 	})
 
-    setUpRouter(r, authHandler, userHandler, tokenRepo)
+	setUpRouter(r, authHandler, userHandler, tokenRepo)
 
 	fmt.Println("Server running at :8080")
 	if err := r.Run(":8080"); err != nil {
@@ -60,7 +54,7 @@ func main() {
 }
 
 func setUpRouter(r *gin.Engine, authH *handler.AuthHandler, userH *handler.UserHandler, tokens domain.TokenRepository) {
-    api := r.Group("/api")
-    route.AuthRouter(api, authH, tokens)
-    route.UsersRouter(api, userH, tokens)
+	api := r.Group("/api")
+	route.AuthRouter(api, authH, tokens)
+	route.UsersRouter(api, userH, tokens)
 }
