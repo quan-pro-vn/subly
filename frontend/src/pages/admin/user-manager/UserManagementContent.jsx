@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
 import { listUsers, deleteUser as apiDeleteUser, updateUser as apiUpdateUser } from '../../../api/users';
 import EditUserModal from './EditUserModal';
-import { getMe } from '../../../api/auth';
+import { useAuth } from '../../../providers/auth';
 
 const UserManagementContent = ({ refreshKey = 0 }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [editing, setEditing] = useState(null);
-  const [currentUserId, setCurrentUserId] = useState(null);
-  const [meLoading, setMeLoading] = useState(true);
+  const currentUserId = useAuth().currentUser?.id;
 
   const fetchUsers = async () => {
     try {
@@ -23,20 +22,8 @@ const UserManagementContent = ({ refreshKey = 0 }) => {
       setLoading(false);
     }
   };
-  const fetchMe = async () => {
-    try {
-      setMeLoading(true);
-      const me = await getMe();
-      setCurrentUserId(me?.id ?? null);
-    } catch (e) {
-      console.error('Không lấy được user hiện tại', e);
-    } finally {
-      setMeLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchMe();
     fetchUsers();
   }, [refreshKey]);
 
@@ -88,7 +75,7 @@ const UserManagementContent = ({ refreshKey = 0 }) => {
                   <td colSpan={3}>Đang tải...</td>
                 </tr>
               ) : users.length === 0 ? (
-                <tr>
+                <tr className="text-center py-6 text-gray-500">
                   <td colSpan={3}>Không có người dùng</td>
                 </tr>
               ) : (
@@ -99,7 +86,7 @@ const UserManagementContent = ({ refreshKey = 0 }) => {
                     <td>
                       <div className="flex gap-2">
                         <button className="btn btn-sm btn-primary flex justify-center" onClick={() => startEdit(u)}>Sửa</button>
-                        <button className="btn btn-sm btn-outline border border-gray-400 flex justify-center" disabled={String(u.id) === String(currentUserId) || meLoading} onClick={() => deleteUser(u.id)}>Xóa</button>
+                        <button className="btn btn-sm btn-outline border border-gray-400 flex justify-center" disabled={String(u.id) === String(currentUserId)} onClick={() => deleteUser(u.id)}>Xóa</button>
                       </div>
                     </td>
                   </tr>
