@@ -9,20 +9,15 @@ import {
   ToolbarPageTitle,
 } from '@/components/layouts/layout-1/components/toolbar';
 
-// import { UserManagerContent } from '.';
 import { useNavigate } from 'react-router-dom';
+import { UserManagementContent } from './UserManagementContent';
 
 const UserManagementPage = () => {
   const navigate = useNavigate();
-//   const [totalUsers, setTotalUsers] = useState(0);
 
   const redirectToCreate = () => {
     navigate('/admin/users/create-basic');
   };
-
-//   const getTotalUsers = (total: number) => {
-//     setTotalUsers(total);
-//   };
 
   return (
     <Fragment>
@@ -32,8 +27,6 @@ const UserManagementPage = () => {
             <ToolbarPageTitle />
             <ToolbarDescription>
               <div className="flex items-center flex-wrap gap-1.5 font-medium">
-                <span className="text-md text-gray-700">Tổng số nhân viên:</span>
-                {/* <span className="text-md text-gray-800 font-medium me-2">{totalUsers}</span> */}
               </div>
             </ToolbarDescription>
           </ToolbarHeading>
@@ -46,7 +39,7 @@ const UserManagementPage = () => {
       </Container>
 
       <Container>
-        {/* <UserManagerContent onData={getTotalUsers} /> */}
+        <UserManagementContent />
       </Container>
     </Fragment>
   );

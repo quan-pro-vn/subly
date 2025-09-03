@@ -3,6 +3,8 @@
 
 @import 'tw-animate-css';
 
+@import 'tailwindcss-animate';
+
 /** Dark Mode Variant **/
 @custom-variant dark (&:is(.dark *));
 
