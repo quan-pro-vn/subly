@@ -9,8 +9,7 @@ const UserManagementContent = ({ refreshKey = 0 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [editing, setEditing] = useState(null);
-  const [currentUserId, setCurrentUserId] = useState(null);
-  const [meLoading, setMeLoading] = useState(true);
+  const currentUserId = useAuth().currentUser?.id;
 
   const fetchUsers = async () => {
     try {
@@ -24,24 +23,6 @@ const UserManagementContent = ({ refreshKey = 0 }) => {
       setLoading(false);
     }
   };
-
-  const fetchMe = async () => {
-    try {
-      setMeLoading(true);
-      const me = await getMe();
-      setCurrentUserId(me?.id ?? null);
-    } catch (e) {
-      console.error('Không lấy được user hiện tại', e);
-    } finally {
-      setMeLoading(false);
-    }
-  };
-
-  // lấy me 1 lần khi mount
-  useEffect(() => {
-    fetchMe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // refetch list theo refreshKey
   useEffect(() => {
@@ -123,7 +104,7 @@ const UserManagementContent = ({ refreshKey = 0 }) => {
                         </button>
                         <button
                           className="btn btn-sm btn-outline border border-gray-400 flex justify-center"
-                          disabled={String(u.id) === String(currentUserId) || meLoading}
+                          disabled={String(u.id) === String(currentUserId)}
                           onClick={() => deleteUser(u.id)}
                         >
                           Xóa
