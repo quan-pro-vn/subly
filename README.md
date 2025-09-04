@@ -1,31 +1,42 @@
 
 # Docker Compose Setup
 
-This repository provides a simple frontend, backend, and MySQL database that can be run together using Docker Compose.
+This repository provides a frontend, backend, and MySQL database orchestrated via Docker Compose.
 
 ## Services
 
-- **frontend** – builds from `frontend/Dockerfile` and serves the web UI on port **80**. Requests to `/api` are proxied to the backend container.
-- **backend** – builds from `backend/Dockerfile` and exposes an API on port **8080**. It reads the `DATABASE_DSN` environment variable for the database connection.
-- **db** – MySQL instance used by the backend with credentials `gorm:gorm` and database `gorm`.
+- frontend: Nginx serves built static files on port 80. Requests to `/api` are proxied to the backend by Nginx (see `frontend/nginx.conf`).
+- backend: Go API on port 8080. Reads `DATABASE_DSN` for DB connection.
+- db: MySQL 8.0 for the backend, credentials `gorm:gorm`, database `gorm`.
 
-All services share the `app-network` network so they can reach each other by container name.
+## Networking
+
+- `internal-net` (bridge, internal: true): private network for communication among `frontend`, `backend`, and `db`.
+- `tinker-net` (external): only the `frontend` service joins this network so it can be reached by your reverse proxy.
+
+Ports are not published by default. Access is expected via a reverse proxy attached to `tinker-net` that routes to `frontend:80`.
 
 ## Usage
 
 1. Ensure Docker and Docker Compose are installed.
-2. From the repository root, build and start the stack:
+2. Ensure the external network exists once on the host:
 
    ```bash
-   docker compose up --build
+   docker network create tinker-net
    ```
 
-   - Frontend available at http://localhost
-   - Backend API at http://localhost:8080
-   - Database exposed on port 3306 (connection DSN: `gorm:gorm@tcp(localhost:3306)/gorm?charset=utf8&parseTime=True&loc=Local`)
+3. Build and start the stack:
 
-3. To stop and remove the containers:
+   ```bash
+   docker compose up -d --build
+   ```
+
+4. Attach your reverse proxy (Nginx/Traefik/NGINX Proxy Manager) to `tinker-net` and route traffic to `frontend:80`.
+
+5. Stop and remove the stack:
 
    ```bash
    docker compose down
    ```
+
+For local development exposing ports directly, see `docker-compose.dev.yml` or create a `docker-compose.override.yml` to publish desired ports.

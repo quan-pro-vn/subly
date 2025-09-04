@@ -6,7 +6,9 @@ Tài liệu mô tả kiến trúc dịch vụ, biến môi trường, mạng Doc
 - frontend: React (Vite) build sẵn, phục vụ bởi nginx nội bộ container (cổng 80). Proxy mọi yêu cầu có tiền tố `/api` sang backend qua mạng Docker.
 - backend: Go (Gin) lắng nghe `:8080`. Đọc DSN từ `DATABASE_DSN`. Tự động migrate schema với GORM khi khởi động.
 - db: MySQL 8.0, dữ liệu lưu ở volume `db-data`, có healthcheck trước khi backend khởi chạy.
-- Mạng: Tất cả container tham gia mạng ngoài `tinker-net` (Compose `external: true`) để dùng chung với reverse proxy của hệ thống.
+- Mạng: Dùng hai mạng Docker:
+  - `internal-net` (bridge, `internal: true`) cho giao tiếp nội bộ giữa `frontend` ↔ `backend` ↔ `db`.
+  - `tinker-net` (external) chỉ gắn cho `frontend` để reverse proxy của hệ thống có thể truy cập.
 
 Luồng truy cập: Client → (Reverse Proxy) → frontend (nginx) → /api → backend → db.
 
@@ -29,7 +31,7 @@ Luồng truy cập: Client → (Reverse Proxy) → frontend (nginx) → /api →
 - Phương án A – Reverse proxy nội bộ (khuyến nghị đồng nhất với production)
   - Tạo mạng: `docker network create tinker-net` (nếu chưa có).
   - Khởi chạy: `docker compose up -d --build`.
-  - Trỏ reverse proxy (Nginx/Traefik/NGPM) đến `frontend:80` trên mạng `tinker-net`.
+  - Đảm bảo reverse proxy (Nginx/Traefik/NGPM) join mạng `tinker-net` và upstream tới `frontend:80`.
 
 - Phương án B – Mở port trực tiếp (dev nhanh)
   - Tạo `docker-compose.override.yml` (không bắt buộc commit):
@@ -59,7 +61,7 @@ server {
   location / { proxy_pass http://app_frontend; }
 }
 ```
-Lưu ý: Proxy tới `frontend:80`. Tuyến `/api` đã được `frontend/nginx.conf` chuyển tiếp sang `backend:8080` nội bộ.
+Lưu ý: Proxy tới `frontend:80` trên `tinker-net`. Tuyến `/api` đã được `frontend/nginx.conf` chuyển tiếp sang `backend:8080` qua mạng nội bộ `internal-net`.
 
 ## Dữ liệu & migration
 - Backend gọi AutoMigrate cho bảng Users và Tokens (xem `backend/internal/database/database.go`).
@@ -92,10 +94,10 @@ Lưu ý: Proxy tới `frontend:80`. Tuyến `/api` đã được `frontend/nginx
 - Sao lưu định kỳ volume `db-data` và lưu bản sao ngoại vi (offsite).
 
 ## Khác biệt với README.md
-- `README.md` mô tả mạng `app-network` và publish port mặc định. Cấu hình hiện tại dùng mạng ngoài `tinker-net` và không publish port (phù hợp khi chạy sau reverse proxy). Dùng phần “Chạy cục bộ” để chọn mô hình phù hợp.
+- `README.md` mô tả mạng `app-network` và publish port mặc định. Cấu hình hiện tại dùng `internal-net` (riêng tư) và `tinker-net` (chỉ cho frontend, phục vụ reverse proxy). Dùng phần “Chạy cục bộ” để chọn mô hình phù hợp.
 
 ## Xử lý sự cố (Troubleshooting)
-- Frontend/Backend không truy cập được tên service: Kiểm tra mạng `tinker-net` đã tồn tại và các container đã gắn vào: `docker network inspect tinker-net`.
+- Frontend/Backend không truy cập được tên service: Kiểm tra `internal-net` tồn tại và cả ba dịch vụ đã gắn vào; `frontend` phải đồng thời ở `internal-net` và `tinker-net`.
 - Backend không kết nối được MySQL: Chờ DB healthy; xem log `docker compose logs -f db`. Kiểm tra `DATABASE_DSN` đúng host `db:3306` trong mạng Docker.
 - 502 từ reverse proxy: Kiểm tra reverse proxy có join mạng `tinker-net` và upstream trỏ `frontend:80` đúng tên dịch vụ Compose.
 - Cổng dev không lên khi dùng override: Đảm bảo giá trị trong `.env` root không bị trùng port đang dùng trên host.

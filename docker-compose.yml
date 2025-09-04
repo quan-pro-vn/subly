@@ -11,7 +11,7 @@ services:
       db:
         condition: service_healthy
     networks:
-      - tinker-net
+      - internal-net
 
   frontend:
     build:
@@ -20,6 +20,7 @@ services:
     depends_on:
       - backend
     networks:
+      - internal-net
       - tinker-net
 
   db:
@@ -40,7 +41,7 @@ services:
     # ports:
       # - "${DB_PORT}:3306"
     networks:
-      - tinker-net
+      - internal-net
 
 
 volumes:
@@ -49,3 +50,6 @@ volumes:
 networks:
   tinker-net:
     external: true
+  internal-net:
+    driver: bridge
+    internal: true
