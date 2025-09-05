@@ -8,12 +8,12 @@ services:
     restart: unless-stopped  
     environment:
       - DATABASE_DSN=gorm:gorm@tcp(db:3306)/gorm?charset=utf8&parseTime=True&loc=Local
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ping | grep -q pong || exit 1"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
-      start_period: 5s
+    # healthcheck:
+    #   test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ping | grep -q pong || exit 1"]
+    #   interval: 60s
+    #   timeout: 3s
+    #   retries: 20
+    #   start_period: 60s
     depends_on:
       db:
         condition: service_healthy
@@ -40,7 +40,8 @@ services:
       MYSQL_PASSWORD: gorm
       MYSQL_ROOT_PASSWORD: root
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
+      # Use TCP check on 127.0.0.1:3306 to avoid passing during MySQL's temporary init socket phase
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -P 3306 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 5s
       timeout: 5s
       retries: 20
