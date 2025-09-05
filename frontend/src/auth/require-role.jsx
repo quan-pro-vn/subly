@@ -13,9 +13,8 @@ export function RequireRole({ roles = [] }) {
 
   if (!allowed) {
     const next = encodeURIComponent(location.pathname + location.search + location.hash);
-    return <Navigate to={`/layout-1?error=forbidden&next=${next}`} replace />;
+    return <Navigate to={`/dashboard?error=forbidden&next=${next}`} replace />;
   }
 
   return <Outlet />;
 }
-

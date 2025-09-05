@@ -48,13 +48,9 @@ import {
 
 export const MENU_SIDEBAR = [
   {
-    title: 'Dashboards',
+    title: 'Dashboard',
     icon: LayoutGrid,
-    children: [
-      { title: 'Light Sidebar', path: '/layout-1' },
-      { title: 'Dark Sidebar', path: '/layout-1/dark-sidebar' },
-      { title: 'Empty Page', path: '/layout-1/empty' },
-    ],
+    path: '/dashboard',
   },
   { heading: 'Admin' },
   {
@@ -66,7 +62,7 @@ export const MENU_SIDEBAR = [
 ];
 
 export const MENU_MEGA = [
-  { title: 'Home', path: '/layout-1' },
+  { title: 'Home', path: '/dashboard' },
   {
     title: 'Profiles',
     children: [
@@ -471,7 +467,7 @@ export const MENU_MEGA = [
         children: [
           {
             children: [
-              { title: 'Home', path: '/layout-1' },
+              { title: 'Home', path: '/dashboard' },
               {
                 title: 'Search Results - Grid',
                 path: '#',
@@ -516,7 +512,7 @@ export const MENU_MEGA = [
 ];
 
 export const MENU_MEGA_MOBILE = [
-  { title: 'Home', path: '/layout-1' },
+  { title: 'Home', path: '/dashboard' },
   {
     title: 'Profiles',
     children: [
@@ -790,7 +786,7 @@ export const MENU_MEGA_MOBILE = [
   {
     title: 'Store - Client',
     children: [
-      { title: 'Home', path: '/layout-1' },
+      { title: 'Home', path: '/dashboard' },
       {
         title: 'Search Results - Grid',
         path: '#',

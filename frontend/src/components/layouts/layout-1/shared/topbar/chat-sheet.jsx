@@ -284,7 +284,7 @@ export function ChatSheet({ trigger }) {
                 <Button size="sm" variant="outline">
                   Decline
                 </Button>
-                <Button size="sm" variant="mono">
+                <Button size="sm" variant="mono" className="btn-primary">
                   Accept
                 </Button>
               </div>
@@ -293,7 +293,7 @@ export function ChatSheet({ trigger }) {
           <div className="p-5 flex items-center gap-2 relative">
             <img
               src={toAbsoluteUrl('/media/avatars/300-2.png')}
-              className="w-8 h-8 rounded-full absolute left-7 top-1/2 -translate-y-1/2"
+              className="w-8 h-8 rounded-full"
               alt=""
             />
 
@@ -305,11 +305,11 @@ export function ChatSheet({ trigger }) {
               className="w-full ps-12 pe-24 py-4 h-auto"
             />
 
-            <div className="absolute end-7 top-1/2 -translate-y-1/2 flex gap-2">
+            <div className="flex gap-2">
               <Button size="sm" variant="ghost" mode="icon">
                 <Upload className="size-4!" />
               </Button>
-              <Button size="sm" variant="mono">
+              <Button size="sm" variant="mono" className="btn-primary">
                 Send
               </Button>
             </div>

@@ -11,7 +11,7 @@ export function AuthRouting() {
     const safeNext =
       next && !next.startsWith('/auth')
         ? decodeURIComponent(next)
-        : '/layout-1';
+        : '/dashboard';
     return <Navigate to={safeNext} replace />;
   }
 

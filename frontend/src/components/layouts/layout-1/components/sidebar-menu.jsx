@@ -26,7 +26,7 @@ export function SidebarMenu() {
   const matchPath = useCallback(
     (path) =>
       path === pathname ||
-      (path.length > 1 && pathname.startsWith(path) && path !== '/layout-1'),
+      (path.length > 1 && pathname.startsWith(path) && path !== '/dashboard'),
     [pathname],
   );
 

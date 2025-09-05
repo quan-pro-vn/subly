@@ -9,11 +9,11 @@ import { UserManagementPage } from '../pages/admin/user-manager/UserManagementPa
 export function AppRoutingSetup() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/layout-1" replace />} />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route element={<RequireAuth />}>
         <Route element={<Layout1 />}>
-          <Route path="/layout-1" element={<Layout1Page />} />
-          <Route path="/layout-1/dark-sidebar" element={<Layout1Page />} />
+          <Route path="/dashboard" element={<Layout1Page />} />
+          <Route path="/dashboard/dark-sidebar" element={<Layout1Page />} />
           <Route element={<RequireRole roles={["admin"]} />}>
             <Route path="/user-management" element={<UserManagementPage />} />
           </Route>

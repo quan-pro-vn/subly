@@ -73,7 +73,7 @@ export default function LoginPage() {
     setError(null);
     try {
       await handleLogin(values);
-      const nextPath = searchParams.get('next') || '/layout-1';
+      const nextPath = searchParams.get('next') || '/dashboard';
       navigate(nextPath, { replace: true });
     } catch (err) {
       setError(
