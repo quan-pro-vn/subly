@@ -25,9 +25,9 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    depends_on:
-      backend:
-        condition: service_healthy
+    # depends_on:
+    #   backend:
+    #     condition: service_healthy
     networks:
       - internal-net
       - tinker-net
