@@ -62,7 +62,7 @@ const I18N_LANGUAGES = [
 export function UserDropdownMenu({ trigger }) {
   const currenLanguage = I18N_LANGUAGES[0];
   const { theme, setTheme } = useTheme();
-  const { signOut } = useAuth();
+  const { signOut, currentUser } = useAuth();
   const navigate = useNavigate();
 
   const handleThemeToggle = (checked) => {
@@ -87,92 +87,19 @@ export function UserDropdownMenu({ trigger }) {
                 to="#"
                 className="text-sm text-mono hover:text-primary font-semibold"
               >
-                Sean
+                {currentUser?.name || currentUser?.email?.split('@')[0] || 'User'}
               </Link>
               <a
-                href={`mailto:sean@kt.com`}
+                href={currentUser?.email ? `mailto:${currentUser.email}` : '#'}
                 className="text-xs text-muted-foreground hover:text-primary"
               >
-                sean@kt.com
+                {currentUser?.email || 'user@example.com'}
               </a>
             </div>
           </div>
-          <Badge variant="primary" appearance="light" size="sm">
-            Pro
-          </Badge>
         </div>
 
         <DropdownMenuSeparator />
-
-        {/* Menu Items */}
-        <DropdownMenuItem asChild>
-          <Link to="#" className="flex items-center gap-2">
-            <IdCard />
-            Public Profile
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="#" className="flex items-center gap-2">
-            <UserCircle />
-            My Profile
-          </Link>
-        </DropdownMenuItem>
-
-        {/* My Account Submenu */}
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger className="flex items-center gap-2">
-            <Settings />
-            My Account
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent className="w-48">
-            <DropdownMenuItem asChild>
-              <Link to="#" className="flex items-center gap-2">
-                <Coffee />
-                Get Started
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="#" className="flex items-center gap-2">
-                <FileText />
-                My Profile
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="#" className="flex items-center gap-2">
-                <CreditCard />
-                Billing
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="#" className="flex items-center gap-2">
-                <Shield />
-                Security
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="#" className="flex items-center gap-2">
-                <Users />
-                Members & Roles
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="#" className="flex items-center gap-2">
-                <BetweenHorizontalStart />
-                Integrations
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-
-        <DropdownMenuItem asChild>
-          <Link
-            to="https://devs.keenthemes.com"
-            className="flex items-center gap-2"
-          >
-            <SquareCode />
-            Dev Forum
-          </Link>
-        </DropdownMenuItem>
 
         {/* Language Submenu with Radio Group */}
         <DropdownMenuSub>
