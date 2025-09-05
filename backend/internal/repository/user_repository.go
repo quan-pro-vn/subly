@@ -21,7 +21,7 @@ func (r *UserRepository) Create(user *model.User) error {
 
 func (r *UserRepository) List() ([]model.User, error) {
     var users []model.User
-    if err := r.db.Order("id DESC").Find(&users).Error; err != nil {
+    if err := r.db.Preload("Roles").Order("id DESC").Find(&users).Error; err != nil {
         return nil, err
     }
     return users, nil
@@ -29,18 +29,18 @@ func (r *UserRepository) List() ([]model.User, error) {
 
 func (r *UserRepository) FindByEmail(email string) (*model.User, error) {
     var user model.User
-    if err := r.db.Where("email = ?", email).First(&user).Error; err != nil {
+    if err := r.db.Preload("Roles").Where("email = ?", email).First(&user).Error; err != nil {
         return nil, err
     }
     return &user, nil
 }
 
 func (r *UserRepository) FindByID(id uint) (*model.User, error) {
-	var user model.User
-	if err := r.db.First(&user, id).Error; err != nil {
-		return nil, err
-	}
-	return &user, nil
+    var user model.User
+    if err := r.db.Preload("Roles").First(&user, id).Error; err != nil {
+        return nil, err
+    }
+    return &user, nil
 }
 
 func (r *UserRepository) Update(user *model.User) error {

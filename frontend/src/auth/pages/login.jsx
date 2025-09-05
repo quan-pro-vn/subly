@@ -59,6 +59,9 @@ export default function LoginPage() {
     resolver: zodResolver(signinSchema),
   });
 
+  // ISO-strong demo password (>=12 chars, upper, lower, number, special)
+  const strongPassword = 'ISO27001!Demo@2025';
+
   const { signIn } = useAuth();
 
   const handleLogin = async (values) => {
@@ -195,6 +198,29 @@ export default function LoginPage() {
             </FormItem>
           )}
         />
+
+        {/* Demo accounts quick fill password */}
+        <div className="space-y-2">
+          <div className="text-sm font-medium">Quick login</div>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { label: 'Admin', email: 'admin@example.com' },
+              { label: 'User', email: 'user@example.com' },
+            ].map((u) => (
+              <Button
+                key={u.email}
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  form.setValue('email', u.email, { shouldValidate: true });
+                  form.setValue('password', strongPassword, { shouldValidate: true });
+                }}
+              >
+                {u.label}
+              </Button>
+            ))}
+          </div>
+        </div>
 
         <Button type="submit" className="w-full" disabled={isProcessing}>
           {isProcessing ? (

@@ -8,6 +8,7 @@ type User struct {
     Name      string `gorm:"size:255" json:"name"`
     Email     string `gorm:"uniqueIndex;size:255" json:"email"`
     Password  string `json:"-"`
+    Roles     []Role `gorm:"many2many:user_roles" json:"roles,omitempty"`
     CreatedAt time.Time
     UpdatedAt time.Time
 }

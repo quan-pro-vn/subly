@@ -61,6 +61,7 @@ export const MENU_SIDEBAR = [
     title: 'User Management',
     icon: UserCircle,
     path: '/user-management',
+    requireRoles: ['admin'],
   },
 ];
 

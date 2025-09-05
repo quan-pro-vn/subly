@@ -1,11 +1,11 @@
 package database
 
 import (
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
+    "gorm.io/driver/mysql"
+    "gorm.io/gorm"
 
-	"metronic/internal/domain"
-	"metronic/internal/model"
+    "metronic/internal/domain"
+    "metronic/internal/model"
 )
 
 // Connect opens database connection and migrates models
@@ -14,8 +14,13 @@ func Connect(dsn string) (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := db.AutoMigrate(&model.User{}, &domain.Token{}); err != nil {
-		return nil, err
-	}
-	return db, nil
+    if err := db.AutoMigrate(
+        &model.User{},
+        &model.Role{},
+        &model.Permission{},
+        &domain.Token{},
+    ); err != nil {
+        return nil, err
+    }
+    return db, nil
 }

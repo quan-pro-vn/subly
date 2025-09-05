@@ -180,17 +180,6 @@ export function UserDropdownMenu({ trigger }) {
             <Globe />
             <span className="flex items-center justify-between gap-2 grow relative">
               Language
-              <Badge
-                variant="outline"
-                className="absolute end-0 top-1/2 -translate-y-1/2"
-              >
-                {currenLanguage.label}
-                <img
-                  src={currenLanguage.flag}
-                  className="w-3.5 h-3.5 rounded-full"
-                  alt={currenLanguage.label}
-                />
-              </Badge>
             </span>
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-48">

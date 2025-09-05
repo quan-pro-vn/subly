@@ -4,6 +4,7 @@ import { useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { MENU_SIDEBAR } from '@/config/layout-1.config';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/providers/auth';
 import {
   AccordionMenu,
   AccordionMenuGroup,
@@ -18,6 +19,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 export function SidebarMenu() {
   const { pathname } = useLocation();
+  // Current user roles
+  const { currentUser } = useAuth();
 
   // Memoize matchPath to prevent unnecessary re-renders
   const matchPath = useCallback(
@@ -40,6 +43,50 @@ export function SidebarMenu() {
       'h-8 hover:bg-transparent text-accent-foreground hover:text-primary data-[selected=true]:text-primary data-[selected=true]:bg-muted data-[selected=true]:font-medium',
     subContent: 'py-0',
     indicator: '',
+  };
+
+  const userRoles = (currentUser?.roles || []).map((r) => r.name);
+
+  const canSee = (item) => {
+    if (Array.isArray(item.requireRoles) && item.requireRoles.length > 0) {
+      return userRoles.some((role) => item.requireRoles.includes(role));
+    }
+    return true;
+  };
+
+  const filterItems = (items) => {
+    const out = [];
+    for (const item of items) {
+      if (item.heading) {
+        out.push(item);
+        continue;
+      }
+      if (item.children) {
+        const children = filterItems(item.children);
+        if (children.length > 0) {
+          out.push({ ...item, children });
+        } else if (canSee(item) && !item.children) {
+          out.push(item);
+        }
+      } else if (canSee(item)) {
+        out.push(item);
+      }
+    }
+    // Remove headings that don't precede any visible items
+    const pruned = [];
+    let pendingHeading = null;
+    for (const it of out) {
+      if (it.heading) {
+        pendingHeading = it;
+        continue;
+      }
+      if (pendingHeading) {
+        pruned.push(pendingHeading);
+        pendingHeading = null;
+      }
+      pruned.push(it);
+    }
+    return pruned;
   };
 
   const buildMenu = (items) => {
@@ -201,7 +248,7 @@ export function SidebarMenu() {
         collapsible
         classNames={classNames}
       >
-        {buildMenu(MENU_SIDEBAR)}
+        {buildMenu(filterItems(MENU_SIDEBAR))}
       </AccordionMenu>
     </ScrollArea>
   );

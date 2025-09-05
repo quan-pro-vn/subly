@@ -11,6 +11,12 @@ export function AuthProvider({ children }) {
     const data = await api.login(email, password);
     setToken(data.access_token);
     localStorage.setItem('auth_token', data.access_token);
+    try {
+      const u = await api.getMe();
+      setCurrentUser(u);
+    } catch {
+      // ignore; fallback to restore later
+    }
   };
 
   const signUp = async (email, password) => {

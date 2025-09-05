@@ -20,10 +20,15 @@ import (
 func main() {
 	cfg := config.Load()
 
-	db, err := database.Connect(cfg.DBDSN)
-	if err != nil {
-		log.Fatalf("db connect: %v", err)
-	}
+    db, err := database.Connect(cfg.DBDSN)
+    if err != nil {
+        log.Fatalf("db connect: %v", err)
+    }
+
+    // Seed default roles and demo users
+    if err := database.Seed(db); err != nil {
+        log.Fatalf("db seed: %v", err)
+    }
 
 	userRepo := repository.NewUserRepository(db)
 	tokenRepo := repository.NewTokenRepository(db)
