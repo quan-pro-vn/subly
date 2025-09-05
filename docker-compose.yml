@@ -43,8 +43,8 @@ services:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
       interval: 5s
       timeout: 5s
-      retries: 10
-      start_period: 5s
+      retries: 20
+      start_period: 20s
     volumes:
       - db-data:/var/lib/mysql
     # ports:
