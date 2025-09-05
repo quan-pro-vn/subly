@@ -12090,8 +12090,6 @@
 :after {
   --tw-border-spacing-x: 0;
   --tw-border-spacing-y: 0;
-  --tw-translate-x: 0;
-  --tw-translate-y: 0;
   --tw-rotate: 0;
   --tw-skew-x: 0;
   --tw-skew-y: 0;
@@ -12143,8 +12141,6 @@
 ::backdrop {
   --tw-border-spacing-x: 0;
   --tw-border-spacing-y: 0;
-  --tw-translate-x: 0;
-  --tw-translate-y: 0;
   --tw-rotate: 0;
   --tw-skew-x: 0;
   --tw-skew-y: 0;
@@ -12701,12 +12697,9 @@ video {
   --secondary-foreground: 0 0% 100%;
   --muted: 230 25% 95%;
   --muted-foreground: 224 16% 54%;
-  --accent: 230 25% 95%;
-  --accent-foreground: 223 32% 22%;
   --destructive: 349 86% 50%;
   --destructive-foreground: 0 0% 100%;
   --border: 230 25% 95%;
-  --input: 225 23% 89%;
   --ring: 212 88% 51%;
   --radius: 0.5rem;
   --chart-1: 47 100% 48%;
@@ -12728,12 +12721,9 @@ video {
   --secondary-foreground: 0 0% 100%;
   --muted: 231 11% 12%;
   --muted-foreground: 232 7% 53%;
-  --accent: 231 11% 12%;
-  --accent-foreground: 234 15% 75%;
   --destructive: 349 86% 50%;
   --destructive-foreground: 0 0% 100%;
   --border: 231 11% 12%;
-  --input: 228 11% 24%;
   --ring: 212 88% 51%;
   --chart-1: 47 100% 48%;
   --chart-2: 137 89% 40%;
@@ -17045,9 +17035,6 @@ div.rating-label.checked .rating-off {
 .border-info-clarity {
   border-color: var(--tw-info-clarity);
 }
-.border-input {
-  border-color: hsl(var(--input));
-}
 .border-orange-100 {
   --tw-border-opacity: 1;
   border-color: rgb(255 237 213 / var(--tw-border-opacity, 1));
@@ -18154,9 +18141,6 @@ div.rating-label.checked .rating-off {
 .text-red-600 {
   --tw-text-opacity: 1;
   color: rgb(220 38 38 / var(--tw-text-opacity, 1));
-}
-.text-secondary-foreground {
-  color: hsl(var(--secondary-foreground));
 }
 .text-success {
   color: var(--tw-success);

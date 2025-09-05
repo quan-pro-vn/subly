@@ -56,7 +56,6 @@ export function NotificationsSheet({ trigger }) {
                   Inbox
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500 absolute top-1 -end-1" />
                 </TabsTrigger>
-                <TabsTrigger value="team">Team</TabsTrigger>
                 <TabsTrigger value="following">Following</TabsTrigger>
                 <div className="grow flex items-center justify-end">
                   <DropdownMenu>

@@ -20,7 +20,6 @@ import {
   SheetHeader,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { SearchDialog } from '@/components/layouts/layout-1/shared/dialogs/search/search-dialog';
 import { AppsDropdownMenu } from '@/components/layouts/layout-1/shared/topbar/apps-dropdown-menu';
 import { ChatSheet } from '@/components/layouts/layout-1/shared/topbar/chat-sheet';
 import { NotificationsSheet } from '@/components/layouts/layout-1/shared/topbar/notifications-sheet';
@@ -115,20 +114,6 @@ export function Header() {
 
         {/* HeaderTopbar */}
         <div className="flex items-center gap-3">
-          {!mobileMode && (
-            <SearchDialog
-              trigger={
-                <Button
-                  variant="ghost"
-                  mode="icon"
-                  shape="circle"
-                  className="size-9 hover:bg-primary/10 hover:[&_svg]:text-primary"
-                >
-                  <Search className="size-4.5!" />
-                </Button>
-              }
-            />
-          )}
           <NotificationsSheet
             trigger={
               <Button
