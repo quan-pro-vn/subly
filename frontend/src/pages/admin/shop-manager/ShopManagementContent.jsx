@@ -82,17 +82,19 @@ const ShopManagementContent = ({ refreshKey = 0 }) => {
                 <th className="min-w-[260px]">UUID</th>
                 <th className="min-w-[260px]">Domain</th>
                 <th className="min-w-[160px]">Hết hạn</th>
+                <th className="min-w-[140px]">Tình trạng</th>
+                <th className="min-w-[140px]">Còn lại (ngày)</th>
                 <th className="min-w-[60px]"></th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={4}>Đang tải...</td>
+                  <td colSpan={6}>Đang tải...</td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={4}>Không có shop</td>
+                  <td colSpan={6}>Không có shop</td>
                 </tr>
               ) : (
                 items.map((it) => (
@@ -100,6 +102,15 @@ const ShopManagementContent = ({ refreshKey = 0 }) => {
                     <td className="font-mono text-xs">{it.uuid}</td>
                     <td>{it.domain}</td>
                     <td>{it.expired_at ? formatDate(new Date(it.expired_at)) : '-'}</td>
+                    <td>
+                      {(() => {
+                        const st = computeExpiryInfo(it.expired_at);
+                        return (
+                          <span className={`badge ${st.className}`}>{st.label}</span>
+                        );
+                      })()}
+                    </td>
+                    <td>{computeExpiryInfo(it.expired_at).daysDisplay}</td>
                     <td>
                       <div className="flex gap-2">
                         <button
@@ -144,4 +155,25 @@ function formatDate(d) {
   const m = String(d.getUTCMonth() + 1).padStart(2, '0');
   const day = String(d.getUTCDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
+}
+
+// Compute status and remaining days from expired_at ISO string
+function computeExpiryInfo(expiredAtISO) {
+  if (!expiredAtISO) {
+    return {
+      label: 'Không giới hạn',
+      className: 'badge-success',
+      daysDisplay: '—',
+    };
+  }
+  const now = new Date();
+  const exp = new Date(expiredAtISO);
+  const diffMs = exp.getTime() - now.getTime();
+  const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const isValid = diffMs >= 0;
+  return {
+    label: isValid ? 'Còn hạn' : 'Hết hạn',
+    className: isValid ? 'badge-success' : 'badge-danger',
+    daysDisplay: isValid ? Math.max(0, days) : 0,
+  };
 }
