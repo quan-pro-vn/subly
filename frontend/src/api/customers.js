@@ -7,3 +7,7 @@ export function listCustomers() {
 export function getCustomer(id) {
   return http.get(`/customers/${id}`).then((r) => r.data);
 }
+
+export function deleteCustomer(id) {
+  return http.delete(`/customers/${id}`);
+}

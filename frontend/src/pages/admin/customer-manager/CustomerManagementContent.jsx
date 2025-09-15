@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { listCustomers } from '@/api/customers';
+import { listCustomers, deleteCustomer as apiDeleteCustomer } from '@/api/customers';
+import { toast } from 'sonner';
 
 const CustomerManagementContent = ({ refreshKey = 0 }) => {
   const [items, setItems] = useState([]);
@@ -23,6 +24,19 @@ const CustomerManagementContent = ({ refreshKey = 0 }) => {
     fetchItems();
   }, [refreshKey]);
 
+  const deleteItem = async (id) => {
+    if (!window.confirm('Bạn có chắc muốn xóa khách hàng này?')) return;
+    try {
+      await apiDeleteCustomer(id);
+      setItems((prev) => prev.filter((u) => u.id !== id));
+      toast.success('Đã xóa khách hàng', { richColors: true });
+    } catch (e) {
+      toast.error(e?.response?.data?.error || 'Xóa thất bại', {
+        richColors: true,
+      });
+    }
+  };
+
   return (
     <div>
       <div className="card-container mt-2">
@@ -36,16 +50,17 @@ const CustomerManagementContent = ({ refreshKey = 0 }) => {
                 <th className="min-w-[260px]">Email</th>
                 <th className="min-w-[160px]">Số điện thoại</th>
                 <th className="min-w-[180px]">Tạo lúc</th>
+                <th className="min-w-[60px]"></th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={4}>Đang tải...</td>
+                  <td colSpan={5}>Đang tải...</td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={4}>Không có khách hàng</td>
+                  <td colSpan={5}>Không có khách hàng</td>
                 </tr>
               ) : (
                 items.map((it) => (
@@ -54,6 +69,16 @@ const CustomerManagementContent = ({ refreshKey = 0 }) => {
                     <td>{it.email}</td>
                     <td>{it.phone || '-'}</td>
                     <td>{it.created_at ? new Date(it.created_at).toLocaleString() : '-'}</td>
+                    <td>
+                      <div className="flex gap-2">
+                        <button
+                          className="btn btn-sm btn-outline border border-gray-400"
+                          onClick={() => deleteItem(it.id)}
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -66,4 +91,3 @@ const CustomerManagementContent = ({ refreshKey = 0 }) => {
 };
 
 export { CustomerManagementContent };
-

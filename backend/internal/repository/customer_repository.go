@@ -30,3 +30,6 @@ func (r *CustomerRepository) FindByID(id uint) (*model.Customer, error) {
     return &c, nil
 }
 
+func (r *CustomerRepository) DeleteByID(id uint) error {
+    return r.db.Delete(&model.Customer{}, id).Error
+}

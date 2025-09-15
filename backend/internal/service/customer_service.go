@@ -22,3 +22,6 @@ func (s *CustomerService) Get(id uint) (*model.Customer, error) {
     return s.customers.FindByID(id)
 }
 
+func (s *CustomerService) Delete(id uint) error {
+    return s.customers.DeleteByID(id)
+}

@@ -7,11 +7,11 @@ import (
     "metronic/internal/middleware"
 )
 
-// CustomersRouter mounts customer read-only routes
+// CustomersRouter mounts customer routes
 func CustomersRouter(r *gin.RouterGroup, h *handler.CustomerHandler, tokens domain.TokenRepository) {
     auth := r.Group("/")
     auth.Use(middleware.Auth(tokens))
     auth.GET("/customers", h.ListCustomers)
     auth.GET("/customers/:id", h.GetCustomer)
+    auth.DELETE("/customers/:id", h.DeleteCustomer)
 }
-
