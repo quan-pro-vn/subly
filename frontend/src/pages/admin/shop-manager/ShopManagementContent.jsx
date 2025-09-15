@@ -34,6 +34,7 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
     if (!Array.isArray(items)) return [];
     if (filter === 'all') return items;
     const now = new Date();
+    const dayMs = 1000 * 60 * 60 * 24;
     const parsed = items
       .map((it) => ({
         it,
@@ -41,7 +42,17 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
       }))
       .filter(({ it, exp }) => {
         const isValid = !exp || exp.getTime() - now.getTime() >= 0;
-        return filter === 'valid' ? isValid : !isValid;
+        if (filter === 'valid') return isValid;
+        if (filter === 'expired') return !isValid;
+        if (filter === 'notOver1y') {
+          // include: valid OR expired within last 365 days
+          if (isValid) return true;
+          // expired
+          if (!exp) return true; // defensive; treat no-expiry as valid
+          const overDays = (now.getTime() - exp.getTime()) / dayMs;
+          return overDays <= 365;
+        }
+        return true;
       });
 
     if (filter === 'valid') {
@@ -60,6 +71,18 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
         if (!b.exp) return -1;
         return b.exp.getTime() - a.exp.getTime();
       });
+    } else if (filter === 'notOver1y') {
+      // Partition: valid first (asc, no-expiry last), then recently expired (desc)
+      const valids = parsed.filter(({ exp }) => !exp || exp.getTime() >= now.getTime());
+      const recents = parsed.filter(({ exp }) => exp && exp.getTime() < now.getTime());
+      valids.sort((a, b) => {
+        if (!a.exp && !b.exp) return 0;
+        if (!a.exp) return 1;
+        if (!b.exp) return -1;
+        return a.exp.getTime() - b.exp.getTime();
+      });
+      recents.sort((a, b) => b.exp.getTime() - a.exp.getTime());
+      return [...valids, ...recents].map(({ it }) => it);
     }
 
     return parsed.map(({ it }) => it);

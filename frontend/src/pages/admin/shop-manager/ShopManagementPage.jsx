@@ -16,7 +16,7 @@ import ShopModal from './ShopModal';
 export const ShopManagementPage = () => {
   const [creating, setCreating] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [tab, setTab] = useState('all');
+  const [tab, setTab] = useState('notOver1y');
 
   const openCreate = () => setCreating(true);
   const closeCreate = () => setCreating(false);
@@ -60,11 +60,15 @@ export const ShopManagementPage = () => {
       <Container>
         <Tabs value={tab} onValueChange={setTab} className="w-full">
           <TabsList variant="line" className="w-full mb-4">
+            <TabsTrigger value="notOver1y">Không quá 1 năm</TabsTrigger>
             <TabsTrigger value="all">Tất cả</TabsTrigger>
             <TabsTrigger value="valid">Còn hạn</TabsTrigger>
             <TabsTrigger value="expired">Hết hạn</TabsTrigger>
           </TabsList>
 
+          <TabsContent value="notOver1y" className="mt-0">
+            <ShopManagementContent refreshKey={refreshKey} filter="notOver1y" />
+          </TabsContent>
           <TabsContent value="all" className="mt-0">
             <ShopManagementContent refreshKey={refreshKey} filter="all" />
           </TabsContent>
