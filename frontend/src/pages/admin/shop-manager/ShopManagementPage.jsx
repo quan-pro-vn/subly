@@ -9,12 +9,14 @@ import {
   ToolbarHeading,
   ToolbarPageTitle,
 } from '@/components/layouts/layout-1/components/toolbar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShopManagementContent } from './ShopManagementContent';
 import ShopModal from './ShopModal';
 
 export const ShopManagementPage = () => {
   const [creating, setCreating] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [tab, setTab] = useState('all');
 
   const openCreate = () => setCreating(true);
   const closeCreate = () => setCreating(false);
@@ -56,7 +58,23 @@ export const ShopManagementPage = () => {
       </Container>
 
       <Container>
-        <ShopManagementContent refreshKey={refreshKey} />
+        <Tabs value={tab} onValueChange={setTab} className="w-full">
+          <TabsList variant="line" className="w-full mb-4">
+            <TabsTrigger value="all">Tất cả</TabsTrigger>
+            <TabsTrigger value="valid">Còn hạn</TabsTrigger>
+            <TabsTrigger value="expired">Hết hạn</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all" className="mt-0">
+            <ShopManagementContent refreshKey={refreshKey} filter="all" />
+          </TabsContent>
+          <TabsContent value="valid" className="mt-0">
+            <ShopManagementContent refreshKey={refreshKey} filter="valid" />
+          </TabsContent>
+          <TabsContent value="expired" className="mt-0">
+            <ShopManagementContent refreshKey={refreshKey} filter="expired" />
+          </TabsContent>
+        </Tabs>
       </Container>
 
       <ShopModal
@@ -69,4 +87,3 @@ export const ShopManagementPage = () => {
     </Fragment>
   );
 };
-

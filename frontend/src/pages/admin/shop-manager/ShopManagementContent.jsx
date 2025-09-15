@@ -7,7 +7,7 @@ import {
 import { toast } from 'sonner';
 import ShopModal from './ShopModal';
 
-const ShopManagementContent = ({ refreshKey = 0 }) => {
+const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -29,6 +29,15 @@ const ShopManagementContent = ({ refreshKey = 0 }) => {
   useEffect(() => {
     fetchItems();
   }, [refreshKey]);
+
+  const filteredItems = useMemo(() => {
+    if (!Array.isArray(items)) return [];
+    if (filter === 'all') return items;
+    return items.filter((it) => {
+      const st = computeExpiryInfo(it.expired_at);
+      return filter === 'valid' ? st.isValid : !st.isValid;
+    });
+  }, [items, filter]);
 
   const startEdit = (it) => setEditing(it);
   const cancelEdit = () => setEditing(null);
@@ -97,7 +106,7 @@ const ShopManagementContent = ({ refreshKey = 0 }) => {
                   <td colSpan={6}>Không có shop</td>
                 </tr>
               ) : (
-                items.map((it) => (
+                filteredItems.map((it) => (
                   <tr key={it.id}>
                     <td className="font-mono text-xs">{it.uuid}</td>
                     <td>{it.domain}</td>
@@ -170,6 +179,7 @@ function computeExpiryInfo(expiredAtISO) {
       label: 'Không giới hạn',
       className: 'badge-success',
       daysDisplay: '—',
+      isValid: true,
     };
   }
   const now = new Date();
@@ -181,5 +191,6 @@ function computeExpiryInfo(expiredAtISO) {
     label: isValid ? 'Còn hạn' : 'Hết hạn',
     className: isValid ? 'badge-success' : 'badge-danger',
     daysDisplay: isValid ? Math.max(0, days) : 0,
+    isValid,
   };
 }
