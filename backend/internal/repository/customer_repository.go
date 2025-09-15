@@ -37,7 +37,7 @@ func (r *CustomerRepository) DeleteByID(id uint) error {
 func (r *CustomerRepository) ListByShopUUID(shopUUID string) ([]model.Customer, error) {
     var items []model.Customer
     q := r.db.Table("customers c").
-        Joins("JOIN customer_shop cs ON cs.user_id = c.id").
+        Joins("JOIN customer_shop cs ON cs.customer_id = c.id").
         Where("cs.shop_uuid = ?", shopUUID).
         Order("c.id DESC").
         Select("c.id, c.name, c.email, c.phone, c.note, c.created_at, c.updated_at")

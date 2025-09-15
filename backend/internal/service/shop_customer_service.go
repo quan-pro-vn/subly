@@ -11,11 +11,10 @@ func NewShopCustomerService(r *repository.CustomerShopRepository) *ShopCustomerS
     return &ShopCustomerService{custShop: r}
 }
 
-func (s *ShopCustomerService) Assign(shopUUID string, userID uint, role string, isOwner bool) error {
-    return s.custShop.Add(shopUUID, userID, role, isOwner)
+func (s *ShopCustomerService) Assign(shopUUID string, customerID uint, role string, isOwner bool) error {
+    return s.custShop.Add(shopUUID, customerID, role, isOwner)
 }
 
-func (s *ShopCustomerService) Remove(shopUUID string, userID uint) error {
-    return s.custShop.Remove(shopUUID, userID)
+func (s *ShopCustomerService) Remove(shopUUID string, customerID uint) error {
+    return s.custShop.Remove(shopUUID, customerID)
 }
-

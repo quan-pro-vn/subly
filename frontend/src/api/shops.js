@@ -21,10 +21,11 @@ export function deleteShop(id) {
   return http.delete(`/shops/${id}`);
 }
 
-export function removeShopCustomer(shopId, userId) {
-  return http.delete(`/shops/${shopId}/customers/${userId}`);
+export function removeShopCustomer(shopId, customerId) {
+  return http.delete(`/shops/${shopId}/customers/${customerId}`);
 }
 
 export function assignShopCustomer(shopId, payload) {
+  // payload expects: { customer_id, role, is_owner }
   return http.post(`/shops/${shopId}/customers`, payload);
 }

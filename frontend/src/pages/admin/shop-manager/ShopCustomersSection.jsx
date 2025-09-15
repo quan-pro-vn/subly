@@ -27,11 +27,11 @@ export default function ShopCustomersSection({ shop }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shop?.uuid]);
 
-  const removeManager = async (userId) => {
+  const removeManager = async (customerId) => {
     if (!window.confirm('Bỏ quyền quản lý của khách hàng này?')) return;
     try {
-      await removeShopCustomer(shop.id, userId);
-      setItems((prev) => prev.filter((u) => u.id !== userId));
+      await removeShopCustomer(shop.id, customerId);
+      setItems((prev) => prev.filter((u) => u.id !== customerId));
       toast.success('Đã bỏ quản lý', { richColors: true });
     } catch (e) {
       toast.error(e?.response?.data?.error || 'Thao tác thất bại', {
@@ -86,4 +86,3 @@ export default function ShopCustomersSection({ shop }) {
     </div>
   );
 }
-
