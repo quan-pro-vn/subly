@@ -5,6 +5,7 @@ import { Layout1 } from '@/components/layouts/layout-1';
 import { AuthRouting } from '../auth/auth-routing';
 import { RequireRole } from '@/auth/require-role';
 import { UserManagementPage } from '../pages/admin/user-manager/UserManagementPage';
+import { ShopManagementPage } from '../pages/admin/shop-manager/ShopManagementPage';
 
 export function AppRoutingSetup() {
   return (
@@ -16,6 +17,7 @@ export function AppRoutingSetup() {
           <Route path="/dashboard/dark-sidebar" element={<Layout1Page />} />
           <Route element={<RequireRole roles={["admin"]} />}>
             <Route path="/user-management" element={<UserManagementPage />} />
+            <Route path="/shop-management" element={<ShopManagementPage />} />
           </Route>
         </Route>
       </Route>

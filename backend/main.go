@@ -30,12 +30,16 @@ func main() {
         log.Fatalf("db seed: %v", err)
     }
 
-	userRepo := repository.NewUserRepository(db)
-	tokenRepo := repository.NewTokenRepository(db)
-	authService := service.NewAuthService(userRepo, tokenRepo)
-	authHandler := handler.NewAuthHandler(authService)
-	userService := service.NewUserService(userRepo)
-	userHandler := handler.NewUserHandler(userService)
+    userRepo := repository.NewUserRepository(db)
+    tokenRepo := repository.NewTokenRepository(db)
+    shopRepo := repository.NewShopRepository(db)
+
+    authService := service.NewAuthService(userRepo, tokenRepo)
+    authHandler := handler.NewAuthHandler(authService)
+    userService := service.NewUserService(userRepo)
+    userHandler := handler.NewUserHandler(userService)
+    shopService := service.NewShopService(shopRepo)
+    shopHandler := handler.NewShopHandler(shopService)
 
 	r := gin.Default()
 	r.Use(cors.New(cors.Config{
@@ -50,7 +54,7 @@ func main() {
 		c.JSON(200, gin.H{"message": "pong"})
 	})
 
-	setUpRouter(r, authHandler, userHandler, tokenRepo)
+    setUpRouter(r, authHandler, userHandler, shopHandler, tokenRepo)
 
 	fmt.Println("Server running at :8080")
 	if err := r.Run(":8080"); err != nil {
@@ -58,8 +62,9 @@ func main() {
 	}
 }
 
-func setUpRouter(r *gin.Engine, authH *handler.AuthHandler, userH *handler.UserHandler, tokens domain.TokenRepository) {
-	api := r.Group("/api")
-	route.AuthRouter(api, authH, tokens)
-	route.UsersRouter(api, userH, tokens)
+func setUpRouter(r *gin.Engine, authH *handler.AuthHandler, userH *handler.UserHandler, shopH *handler.ShopHandler, tokens domain.TokenRepository) {
+    api := r.Group("/api")
+    route.AuthRouter(api, authH, tokens)
+    route.UsersRouter(api, userH, tokens)
+    route.ShopsRouter(api, shopH, tokens)
 }

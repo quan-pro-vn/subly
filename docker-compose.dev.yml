@@ -1,4 +1,10 @@
 services:
+  db:
+    ports:
+      - "${DB_PORT:-3307}:3306"
+    networks:
+      - internal-net
+      - tinker-net
   frontend:
     ports:
       - "${FRONTEND_PORT:-8080}:80"
@@ -7,4 +13,3 @@ services:
     # Uncomment if you want backend accessible from host in dev
     # ports:
     #   - "${BACKEND_PORT:-8081}:8080"
-

@@ -59,6 +59,12 @@ export const MENU_SIDEBAR = [
     path: '/user-management',
     requireRoles: ['admin'],
   },
+  {
+    title: 'Shop Management',
+    icon: Building,
+    path: '/shop-management',
+    requireRoles: ['admin'],
+  },
 ];
 
 export const MENU_MEGA = [
