@@ -33,10 +33,36 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
   const filteredItems = useMemo(() => {
     if (!Array.isArray(items)) return [];
     if (filter === 'all') return items;
-    return items.filter((it) => {
-      const st = computeExpiryInfo(it.expired_at);
-      return filter === 'valid' ? st.isValid : !st.isValid;
-    });
+    const now = new Date();
+    const parsed = items
+      .map((it) => ({
+        it,
+        exp: it.expired_at ? new Date(it.expired_at) : null,
+      }))
+      .filter(({ it, exp }) => {
+        const isValid = !exp || exp.getTime() - now.getTime() >= 0;
+        return filter === 'valid' ? isValid : !isValid;
+      });
+
+    if (filter === 'valid') {
+      // Sort ascending by date; items without expiry come last
+      parsed.sort((a, b) => {
+        if (!a.exp && !b.exp) return 0;
+        if (!a.exp) return 1;
+        if (!b.exp) return -1;
+        return a.exp.getTime() - b.exp.getTime();
+      });
+    } else if (filter === 'expired') {
+      // Sort descending by date (most recently expired first)
+      parsed.sort((a, b) => {
+        if (!a.exp && !b.exp) return 0;
+        if (!a.exp) return 1;
+        if (!b.exp) return -1;
+        return b.exp.getTime() - a.exp.getTime();
+      });
+    }
+
+    return parsed.map(({ it }) => it);
   }, [items, filter]);
 
   const startEdit = (it) => setEditing(it);
