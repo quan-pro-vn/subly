@@ -63,9 +63,10 @@ const ShopManagementContent = ({ refreshKey = 0 }) => {
   const editDefaults = useMemo(() => {
     if (!editing) return undefined;
     return {
-      name: editing.name || '',
       domain: editing.domain || '',
-      active: Boolean(editing.active),
+      expired_at: editing.expired_at
+        ? formatDate(new Date(editing.expired_at))
+        : '',
     };
   }, [editing]);
 
@@ -78,9 +79,9 @@ const ShopManagementContent = ({ refreshKey = 0 }) => {
           <table className="table">
             <thead>
               <tr>
-                <th className="min-w-[260px]">Tên shop</th>
+                <th className="min-w-[260px]">UUID</th>
                 <th className="min-w-[260px]">Domain</th>
-                <th className="min-w-[120px]">Trạng thái</th>
+                <th className="min-w-[160px]">Hết hạn</th>
                 <th className="min-w-[60px]"></th>
               </tr>
             </thead>
@@ -96,15 +97,9 @@ const ShopManagementContent = ({ refreshKey = 0 }) => {
               ) : (
                 items.map((it) => (
                   <tr key={it.id}>
-                    <td>{it.name}</td>
+                    <td className="font-mono text-xs">{it.uuid}</td>
                     <td>{it.domain}</td>
-                    <td>
-                      {Boolean(it.active) ? (
-                        <span className="badge badge-success">Đang hoạt động</span>
-                      ) : (
-                        <span className="badge">Tạm dừng</span>
-                      )}
-                    </td>
+                    <td>{it.expired_at ? formatDate(new Date(it.expired_at)) : '-'}</td>
                     <td>
                       <div className="flex gap-2">
                         <button
@@ -144,3 +139,9 @@ const ShopManagementContent = ({ refreshKey = 0 }) => {
 
 export { ShopManagementContent };
 
+function formatDate(d) {
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}

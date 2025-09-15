@@ -2,6 +2,7 @@ package service
 
 import (
     "errors"
+    "time"
 
     "gorm.io/gorm"
 
@@ -18,14 +19,14 @@ func NewShopService(r *repository.ShopRepository) *ShopService {
     return &ShopService{shops: r}
 }
 
-func (s *ShopService) Create(name, domain string, active bool) (*model.Shop, error) {
+func (s *ShopService) Create(domain string, expiredAt *time.Time) (*model.Shop, error) {
     // Ensure unique domain
     if _, err := s.shops.FindByDomain(domain); err == nil {
         return nil, errors.New("domain already exists")
     } else if !errors.Is(err, gorm.ErrRecordNotFound) {
         return nil, err
     }
-    m := &model.Shop{Name: name, Domain: domain, Active: active}
+    m := &model.Shop{Domain: domain, Active: true, ExpiredAt: expiredAt}
     if err := s.shops.Create(m); err != nil {
         return nil, err
     }
@@ -40,7 +41,7 @@ func (s *ShopService) Get(id uint) (*model.Shop, error) {
     return s.shops.FindByID(id)
 }
 
-func (s *ShopService) Update(id uint, name, domain string, active *bool) (*model.Shop, error) {
+func (s *ShopService) Update(id uint, domain string, expiredAt *time.Time) (*model.Shop, error) {
     m, err := s.shops.FindByID(id)
     if err != nil {
         return nil, err
@@ -53,11 +54,9 @@ func (s *ShopService) Update(id uint, name, domain string, active *bool) (*model
         }
         m.Domain = domain
     }
-    if name != "" {
-        m.Name = name
-    }
-    if active != nil {
-        m.Active = *active
+    if expiredAt != nil || (expiredAt == nil && m.ExpiredAt != nil) {
+        // allow setting to null by sending null
+        m.ExpiredAt = expiredAt
     }
     if err := s.shops.Update(m); err != nil {
         return nil, err
@@ -68,4 +67,3 @@ func (s *ShopService) Update(id uint, name, domain string, active *bool) (*model
 func (s *ShopService) Delete(id uint) error {
     return s.shops.DeleteByID(id)
 }
-

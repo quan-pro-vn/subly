@@ -3,6 +3,7 @@ package handler
 import (
     "net/http"
     "strconv"
+    "time"
 
     "github.com/gin-gonic/gin"
 
@@ -21,19 +22,14 @@ func NewShopHandler(s *service.ShopService) *ShopHandler {
 // CreateShop POST /shops
 func (h *ShopHandler) CreateShop(c *gin.Context) {
     var req struct {
-        Name   string `json:"name" binding:"required"`
-        Domain string `json:"domain" binding:"required"`
-        Active *bool  `json:"active"`
+        Domain    string     `json:"domain" binding:"required"`
+        ExpiredAt *time.Time `json:"expired_at"`
     }
     if err := c.ShouldBindJSON(&req); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
-    active := true
-    if req.Active != nil {
-        active = *req.Active
-    }
-    m, err := h.svc.Create(req.Name, req.Domain, active)
+    m, err := h.svc.Create(req.Domain, req.ExpiredAt)
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
@@ -74,15 +70,14 @@ func (h *ShopHandler) UpdateShop(c *gin.Context) {
         return
     }
     var req struct {
-        Name   string `json:"name"`
-        Domain string `json:"domain"`
-        Active *bool  `json:"active"`
+        Domain    string     `json:"domain"`
+        ExpiredAt *time.Time `json:"expired_at"`
     }
     if err := c.ShouldBindJSON(&req); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
-    m, err := h.svc.Update(uint(id), req.Name, req.Domain, req.Active)
+    m, err := h.svc.Update(uint(id), req.Domain, req.ExpiredAt)
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
@@ -103,4 +98,3 @@ func (h *ShopHandler) DeleteShop(c *gin.Context) {
     }
     c.Status(http.StatusOK)
 }
-

@@ -4,27 +4,25 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 const createSchema = z.object({
-  name: z.string().min(1, 'Vui lòng nhập tên shop'),
   domain: z
     .string()
     .min(1, 'Vui lòng nhập domain')
     .regex(/^[a-z0-9.-]+$/i, 'Domain chỉ gồm chữ, số, dấu . và -'),
-  active: z.boolean().default(true),
+  expired_at: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || /^\d{4}-\d{2}-\d{2}$/.test(v),
+      'Ngày hết hạn không hợp lệ (YYYY-MM-DD)'
+    ),
 });
 
-const editSchema = z.object({
-  name: z.string().min(1, 'Vui lòng nhập tên shop'),
-  domain: z
-    .string()
-    .min(1, 'Vui lòng nhập domain')
-    .regex(/^[a-z0-9.-]+$/i, 'Domain chỉ gồm chữ, số, dấu . và -'),
-  active: z.boolean().default(true),
-});
+const editSchema = createSchema;
 
 export default function ShopModal({
   isOpen,
   mode = 'create',
-  defaultValues = { name: '', domain: '', active: true },
+  defaultValues = { domain: '', expired_at: '' },
   original = null,
   onClose,
   onSubmit,
@@ -56,10 +54,17 @@ export default function ShopModal({
   const changedPayload = useMemo(() => {
     if (mode !== 'edit' || !original) return values;
     const payload = {};
-    if (values.name !== original.name) payload.name = values.name;
     if (values.domain !== original.domain) payload.domain = values.domain;
-    if (Boolean(values.active) !== Boolean(original.active))
-      payload.active = Boolean(values.active);
+    // Map expired_at from YYYY-MM-DD (UI) to ISO string (UTC midnight)
+    const origDate = original.expired_at
+      ? new Date(original.expired_at)
+      : null;
+    const uiChanged = values.expired_at !== (origDate ? formatDate(origDate) : '');
+    if (uiChanged) {
+      payload.expired_at = values.expired_at
+        ? new Date(values.expired_at + 'T00:00:00Z').toISOString()
+        : null;
+    }
     return payload;
   }, [values, mode, original]);
 
@@ -72,7 +77,16 @@ export default function ShopModal({
       onClose?.();
       return;
     }
-    await onSubmit?.(mode === 'edit' ? changedPayload : values);
+    let payload;
+    if (mode === 'edit') {
+      payload = changedPayload;
+    } else {
+      payload = { domain: values.domain };
+      payload.expired_at = values.expired_at
+        ? new Date(values.expired_at + 'T00:00:00Z').toISOString()
+        : null;
+    }
+    await onSubmit?.(payload);
     onClose?.();
   };
 
@@ -87,18 +101,6 @@ export default function ShopModal({
 
         <form onSubmit={handleSubmit(submit)} className="space-y-3">
           <div>
-            <label className="block text-sm mb-1">Tên shop</label>
-            <input
-              className="input input-bordered w-full"
-              placeholder="Ví dụ: Cửa hàng ABC"
-              {...register('name')}
-            />
-            {errors.name && (
-              <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>
-            )}
-          </div>
-
-          <div>
             <label className="block text-sm mb-1">Domain</label>
             <input
               className="input input-bordered w-full"
@@ -112,17 +114,19 @@ export default function ShopModal({
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div>
+            <label className="block text-sm mb-1">Ngày hết hạn</label>
             <input
-              id="active"
-              type="checkbox"
-              className="checkbox"
-              checked={!!values.active}
-              onChange={(e) => setValue('active', e.target.checked)}
+              type="date"
+              className="input input-bordered w-full"
+              value={values.expired_at || ''}
+              onChange={(e) => setValue('expired_at', e.target.value)}
             />
-            <label htmlFor="active" className="text-sm">
-              Kích hoạt
-            </label>
+            {errors.expired_at && (
+              <p className="mt-1 text-xs text-red-600">
+                {errors.expired_at.message}
+              </p>
+            )}
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
@@ -148,3 +152,10 @@ export default function ShopModal({
   );
 }
 
+// Helper to format Date -> YYYY-MM-DD
+function formatDate(d) {
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
