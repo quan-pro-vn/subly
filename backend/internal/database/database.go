@@ -1,16 +1,33 @@
 package database
 
 import (
+    "log"
+    "os"
+    "time"
+
     "gorm.io/driver/mysql"
     "gorm.io/gorm"
+    "gorm.io/gorm/logger"
 
     "metronic/internal/domain"
     "metronic/internal/model"
 )
 
 // Connect opens database connection and migrates models
+
 func Connect(dsn string) (*gorm.DB, error) {
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+    // Enable verbose SQL logging to stdout for development
+    newLogger := logger.New(
+        log.New(os.Stdout, "[gorm] ", log.LstdFlags),
+        logger.Config{
+            SlowThreshold:             200 * time.Millisecond,
+            LogLevel:                  logger.Info, // SQL + bind vars
+            IgnoreRecordNotFoundError: true,
+            Colorful:                  false,
+        },
+    )
+
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: newLogger})
 	if err != nil {
 		return nil, err
 	}
