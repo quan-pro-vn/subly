@@ -21,3 +21,10 @@ export function deleteShop(id) {
   return http.delete(`/shops/${id}`);
 }
 
+export function removeShopCustomer(shopId, userId) {
+  return http.delete(`/shops/${shopId}/customers/${userId}`);
+}
+
+export function assignShopCustomer(shopId, payload) {
+  return http.post(`/shops/${shopId}/customers`, payload);
+}

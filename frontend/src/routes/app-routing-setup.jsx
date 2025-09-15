@@ -7,6 +7,7 @@ import { RequireRole } from '@/auth/require-role';
 import { UserManagementPage } from '../pages/admin/user-manager/UserManagementPage';
 import { ShopManagementPage } from '../pages/admin/shop-manager/ShopManagementPage';
 import { CustomerManagementPage } from '../pages/admin/customer-manager/CustomerManagementPage';
+import ShopDetailPage from '../pages/admin/shop-manager/ShopDetailPage';
 
 export function AppRoutingSetup() {
   return (
@@ -19,6 +20,7 @@ export function AppRoutingSetup() {
           <Route element={<RequireRole roles={["admin"]} />}>
             <Route path="/user-management" element={<UserManagementPage />} />
             <Route path="/shop-management" element={<ShopManagementPage />} />
+            <Route path="/shops/:id" element={<ShopDetailPage />} />
             <Route path="/customer-management" element={<CustomerManagementPage />} />
           </Route>
         </Route>

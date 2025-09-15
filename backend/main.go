@@ -44,7 +44,7 @@ func main() {
     // Shop-Customer membership wiring
     custShopRepo := repository.NewCustomerShopRepository(db)
     shopCustSvc := service.NewShopCustomerService(custShopRepo)
-    shopCustHandler := handler.NewShopCustomerHandler(shopCustSvc)
+    shopCustHandler := handler.NewShopCustomerHandler(shopCustSvc, shopRepo)
     customerService := service.NewCustomerService(customerRepo)
     customerHandler := handler.NewCustomerHandler(customerService)
 

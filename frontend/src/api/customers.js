@@ -11,3 +11,9 @@ export function getCustomer(id) {
 export function deleteCustomer(id) {
   return http.delete(`/customers/${id}`);
 }
+
+export function listCustomersByShop(shopUUID) {
+  return http
+    .get(`/customers`, { params: { shop_uuid: shopUUID } })
+    .then((r) => r.data);
+}

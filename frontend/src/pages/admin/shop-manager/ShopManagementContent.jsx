@@ -113,6 +113,12 @@ const ShopManagementContent = ({ refreshKey = 0 }) => {
                     <td>{computeExpiryInfo(it.expired_at).daysDisplay}</td>
                     <td>
                       <div className="flex gap-2">
+                        <a
+                          className="btn btn-sm btn-outline border border-gray-400"
+                          href={`/shops/${it.id}`}
+                        >
+                          Chi tiết
+                        </a>
                         <button
                           className="btn btn-sm btn-primary"
                           onClick={() => startEdit(it)}
