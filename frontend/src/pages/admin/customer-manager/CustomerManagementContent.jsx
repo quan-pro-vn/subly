@@ -68,7 +68,7 @@ const CustomerManagementContent = ({ refreshKey = 0 }) => {
                     <td>{it.name || '-'}</td>
                     <td>{it.email}</td>
                     <td>{it.phone || '-'}</td>
-                    <td>{it.created_at ? new Date(it.created_at).toLocaleString() : '-'}</td>
+                    <td>{it.created_at ? formatDate(new Date(it.created_at)) : '-'}</td>
                     <td>
                       <div className="flex gap-2">
                         <button
@@ -91,3 +91,10 @@ const CustomerManagementContent = ({ refreshKey = 0 }) => {
 };
 
 export { CustomerManagementContent };
+
+function formatDate(d) {
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
