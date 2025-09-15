@@ -1,30 +1,39 @@
 import { CustomerManagementContent } from './CustomerManagementContent';
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
+import { Container } from '@/components/common/container';
+import {
+  Toolbar,
+  ToolbarActions,
+  ToolbarDescription,
+  ToolbarHeading,
+  ToolbarPageTitle,
+} from '@/components/layouts/layout-1/components/toolbar';
 
 export const CustomerManagementPage = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const refresh = () => setRefreshKey((k) => k + 1);
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="card-container">
-        <div className="card-content flex items-center justify-between gap-3">
-          <div>
-            <div className="text-lg font-semibold">Quản lý khách hàng</div>
-            <div className="text-sm text-muted-foreground">
-              Danh sách khách hàng đã import
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button className="btn btn-outline" onClick={refresh}>
+    <Fragment>
+      <Container>
+        <Toolbar>
+          <ToolbarHeading>
+            <ToolbarPageTitle />
+            <ToolbarDescription>
+              <div className="flex items-center flex-wrap gap-1.5 font-medium" />
+            </ToolbarDescription>
+          </ToolbarHeading>
+          <ToolbarActions>
+            <button className="btn btn-sm btn-outline" onClick={refresh}>
               Tải lại
             </button>
-          </div>
-        </div>
-      </div>
+          </ToolbarActions>
+        </Toolbar>
+      </Container>
 
-      <CustomerManagementContent refreshKey={refreshKey} />
-    </div>
+      <Container>
+        <CustomerManagementContent refreshKey={refreshKey} />
+      </Container>
+    </Fragment>
   );
 };
-
