@@ -33,3 +33,16 @@ func (r *CustomerRepository) FindByID(id uint) (*model.Customer, error) {
 func (r *CustomerRepository) DeleteByID(id uint) error {
     return r.db.Delete(&model.Customer{}, id).Error
 }
+
+func (r *CustomerRepository) ListByShopUUID(shopUUID string) ([]model.Customer, error) {
+    var items []model.Customer
+    q := r.db.Table("customers c").
+        Joins("JOIN customer_shop cs ON cs.user_id = c.id").
+        Where("cs.shop_uuid = ?", shopUUID).
+        Order("c.id DESC").
+        Select("c.id, c.name, c.email, c.phone, c.note, c.created_at, c.updated_at")
+    if err := q.Scan(&items).Error; err != nil {
+        return nil, err
+    }
+    return items, nil
+}

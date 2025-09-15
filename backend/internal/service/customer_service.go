@@ -25,3 +25,7 @@ func (s *CustomerService) Get(id uint) (*model.Customer, error) {
 func (s *CustomerService) Delete(id uint) error {
     return s.customers.DeleteByID(id)
 }
+
+func (s *CustomerService) ListByShop(shopUUID string) ([]model.Customer, error) {
+    return s.customers.ListByShopUUID(shopUUID)
+}

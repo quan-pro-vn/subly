@@ -41,6 +41,10 @@ func main() {
     userHandler := handler.NewUserHandler(userService)
     shopService := service.NewShopService(shopRepo)
     shopHandler := handler.NewShopHandler(shopService)
+    // Shop-Customer membership wiring
+    custShopRepo := repository.NewCustomerShopRepository(db)
+    shopCustSvc := service.NewShopCustomerService(custShopRepo)
+    shopCustHandler := handler.NewShopCustomerHandler(shopCustSvc)
     customerService := service.NewCustomerService(customerRepo)
     customerHandler := handler.NewCustomerHandler(customerService)
 
@@ -57,7 +61,7 @@ func main() {
 		c.JSON(200, gin.H{"message": "pong"})
 	})
 
-    setUpRouter(r, authHandler, userHandler, shopHandler, customerHandler, tokenRepo)
+    setUpRouter(r, authHandler, userHandler, shopHandler, customerHandler, tokenRepo, shopCustHandler)
 
 	fmt.Println("Server running at :8080")
 	if err := r.Run(":8080"); err != nil {
@@ -65,10 +69,11 @@ func main() {
 	}
 }
 
-func setUpRouter(r *gin.Engine, authH *handler.AuthHandler, userH *handler.UserHandler, shopH *handler.ShopHandler, custH *handler.CustomerHandler, tokens domain.TokenRepository) {
+func setUpRouter(r *gin.Engine, authH *handler.AuthHandler, userH *handler.UserHandler, shopH *handler.ShopHandler, custH *handler.CustomerHandler, tokens domain.TokenRepository, shopCustH *handler.ShopCustomerHandler) {
     api := r.Group("/api")
     route.AuthRouter(api, authH, tokens)
     route.UsersRouter(api, userH, tokens)
-    route.ShopsRouter(api, shopH, tokens)
+    // Pass membership handler via shops router
+    route.ShopsRouter(api, shopH, tokens, shopCustH)
     route.CustomersRouter(api, custH, tokens)
 }

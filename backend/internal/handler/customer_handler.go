@@ -6,6 +6,7 @@ import (
 
     "github.com/gin-gonic/gin"
 
+    "metronic/internal/model"
     "metronic/internal/service"
 )
 
@@ -19,8 +20,18 @@ func NewCustomerHandler(s *service.CustomerService) *CustomerHandler {
 }
 
 // ListCustomers GET /customers
+// Optional query: ?shop_uuid=UUID to filter customers linked to a shop
 func (h *CustomerHandler) ListCustomers(c *gin.Context) {
-    items, err := h.svc.List()
+    shopUUID := c.Query("shop_uuid")
+    var (
+        items []model.Customer
+        err error
+    )
+    if shopUUID != "" {
+        items, err = h.svc.ListByShop(shopUUID)
+    } else {
+        items, err = h.svc.List()
+    }
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return

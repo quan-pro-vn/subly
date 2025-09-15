@@ -9,7 +9,7 @@ import (
 )
 
 // ShopsRouter mounts shop CRUD routes
-func ShopsRouter(r *gin.RouterGroup, h *handler.ShopHandler, tokens domain.TokenRepository) {
+func ShopsRouter(r *gin.RouterGroup, h *handler.ShopHandler, tokens domain.TokenRepository, shopCustH *handler.ShopCustomerHandler) {
     auth := r.Group("/")
     auth.Use(middleware.Auth(tokens))
 
@@ -18,5 +18,9 @@ func ShopsRouter(r *gin.RouterGroup, h *handler.ShopHandler, tokens domain.Token
     auth.GET("/shops/:id", h.GetShop)
     auth.POST("/shops/:id", h.UpdateShop)
     auth.DELETE("/shops/:id", h.DeleteShop)
-}
 
+    if shopCustH != nil {
+        auth.POST("/shops/:id/customers", shopCustH.Assign)
+        auth.DELETE("/shops/:id/customers/:user_id", shopCustH.Remove)
+    }
+}
