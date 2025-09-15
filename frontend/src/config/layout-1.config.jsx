@@ -65,6 +65,12 @@ export const MENU_SIDEBAR = [
     path: '/shop-management',
     requireRoles: ['admin'],
   },
+  {
+    title: 'Customer Management',
+    icon: PeopleIcon,
+    path: '/customer-management',
+    requireRoles: ['admin'],
+  },
 ];
 
 export const MENU_MEGA = [
