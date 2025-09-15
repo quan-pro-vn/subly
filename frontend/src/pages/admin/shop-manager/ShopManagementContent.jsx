@@ -211,12 +211,14 @@ function computeExpiryInfo(expiredAtISO) {
   const now = new Date();
   const exp = new Date(expiredAtISO);
   const diffMs = exp.getTime() - now.getTime();
-  const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const dayMs = 1000 * 60 * 60 * 24;
+  const rawDays = diffMs / dayMs;
   const isValid = diffMs >= 0;
   return {
     label: isValid ? 'Còn hạn' : 'Hết hạn',
     className: isValid ? 'badge-success' : 'badge-danger',
-    daysDisplay: isValid ? Math.max(0, days) : 0,
+    // Nếu đã hết hạn, hiển thị số ngày âm
+    daysDisplay: isValid ? Math.ceil(rawDays) : Math.floor(rawDays),
     isValid,
   };
 }
