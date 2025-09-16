@@ -105,6 +105,20 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
     }
   };
 
+  const revokeNow = async (id) => {
+    if (!window.confirm('Thu hồi: đặt shop hết hạn ngay bây giờ?')) return;
+    try {
+      const nowISO = new Date().toISOString();
+      const updated = await apiUpdateShop(id, { expired_at: nowISO });
+      setItems((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      toast.success('Đã thu hồi, shop hết hạn ngay', { richColors: true });
+    } catch (e) {
+      toast.error(e?.response?.data?.error || 'Thu hồi thất bại', {
+        richColors: true,
+      });
+    }
+  };
+
   const deleteItem = async (id) => {
     if (!window.confirm('Bạn có chắc muốn xóa shop này?')) return;
     try {
@@ -182,6 +196,12 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
                           onClick={() => startEdit(it)}
                         >
                           Sửa
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline border border-gray-400"
+                          onClick={() => revokeNow(it.id)}
+                        >
+                          Thu hồi
                         </button>
                         <button
                           className="btn btn-sm btn-outline border border-gray-400"
