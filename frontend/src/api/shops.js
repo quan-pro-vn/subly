@@ -29,3 +29,13 @@ export function assignShopCustomer(shopId, payload) {
   // payload expects: { customer_id, role, is_owner }
   return http.post(`/shops/${shopId}/customers`, payload);
 }
+
+export function renewShop(id, months, note) {
+  return http
+    .post(`/shops/${id}/renew`, { months, note })
+    .then((r) => r.data);
+}
+
+export function listShopRenewals(id) {
+  return http.get(`/shops/${id}/renewals`).then((r) => r.data);
+}

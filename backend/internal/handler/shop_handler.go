@@ -98,3 +98,43 @@ func (h *ShopHandler) DeleteShop(c *gin.Context) {
     }
     c.Status(http.StatusOK)
 }
+
+// RenewShop POST /shops/:id/renew { months, note? }
+func (h *ShopHandler) RenewShop(c *gin.Context) {
+    id64, err := strconv.ParseUint(c.Param("id"), 10, 64)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+        return
+    }
+    var req struct {
+        Months int     `json:"months" binding:"required"`
+        Note   *string `json:"note"`
+    }
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    uidRaw, _ := c.Get("userID")
+    performedBy, _ := uidRaw.(uint)
+    shop, rec, err := h.svc.Renew(uint(id64), req.Months, performedBy, req.Note)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"shop": shop, "renewal": rec})
+}
+
+// ListRenewals GET /shops/:id/renewals
+func (h *ShopHandler) ListRenewals(c *gin.Context) {
+    id64, err := strconv.ParseUint(c.Param("id"), 10, 64)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+        return
+    }
+    items, err := h.svc.ListRenewals(uint(id64))
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    c.JSON(http.StatusOK, items)
+}

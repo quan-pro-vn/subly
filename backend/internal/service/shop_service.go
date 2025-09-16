@@ -13,6 +13,7 @@ import (
 // ShopService encapsulates business logic for shops
 type ShopService struct {
     shops *repository.ShopRepository
+    renewals *repository.ShopRenewalRepository
 }
 
 func NewShopService(r *repository.ShopRepository) *ShopService {
@@ -66,4 +67,79 @@ func (s *ShopService) Update(id uint, domain string, expiredAt *time.Time) (*mod
 
 func (s *ShopService) Delete(id uint) error {
     return s.shops.DeleteByID(id)
+}
+
+// WithRenewalRepo injects the renewal repository (optional wiring style)
+func (s *ShopService) WithRenewalRepo(rr *repository.ShopRenewalRepository) *ShopService {
+    s.renewals = rr
+    return s
+}
+
+// Renew extends shop expiration by given months and records history
+func (s *ShopService) Renew(shopID uint, months int, performedBy uint, note *string) (*model.Shop, *model.ShopRenewal, error) {
+    if months <= 0 {
+        return nil, nil, errors.New("months must be > 0")
+    }
+    m, err := s.shops.FindByID(shopID)
+    if err != nil {
+        return nil, nil, err
+    }
+    now := time.Now()
+    var base time.Time
+    if m.ExpiredAt != nil && m.ExpiredAt.After(now) {
+        base = *m.ExpiredAt
+    } else {
+        base = now
+    }
+    newExp := addMonths(base, months)
+    old := m.ExpiredAt
+    m.ExpiredAt = &newExp
+    if err := s.shops.Update(m); err != nil {
+        return nil, nil, err
+    }
+    rec := &model.ShopRenewal{
+        ShopID:      m.ID,
+        Months:      months,
+        OldExpiredAt: old,
+        NewExpiredAt: newExp,
+        Note:        note,
+        PerformedBy: performedBy,
+    }
+    if s.renewals != nil {
+        if err := s.renewals.Create(rec); err != nil {
+            return nil, nil, err
+        }
+    }
+    return m, rec, nil
+}
+
+// addMonths adds n months to t, keeping day-of-month reasonably
+func addMonths(t time.Time, n int) time.Time {
+    y, m, d := t.Date()
+    // Convert to 1-based month int
+    mi := int(m)
+    mi += n
+    for mi > 12 {
+        y++
+        mi -= 12
+    }
+    for mi <= 0 {
+        y--
+        mi += 12
+    }
+    // Clamp day to end of month
+    firstOfNext := time.Date(y, time.Month(mi)+1, 1, 0, 0, 0, 0, t.Location())
+    lastDay := firstOfNext.Add(-24 * time.Hour).Day()
+    if d > lastDay {
+        d = lastDay
+    }
+    return time.Date(y, time.Month(mi), d, t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), t.Location())
+}
+
+// ListRenewals returns renewal records for a shop (newest first)
+func (s *ShopService) ListRenewals(shopID uint) ([]model.ShopRenewal, error) {
+    if s.renewals == nil {
+        return []model.ShopRenewal{}, nil
+    }
+    return s.renewals.ListByShopID(shopID)
 }

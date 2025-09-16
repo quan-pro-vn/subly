@@ -18,6 +18,9 @@ func ShopsRouter(r *gin.RouterGroup, h *handler.ShopHandler, tokens domain.Token
     auth.GET("/shops/:id", h.GetShop)
     auth.POST("/shops/:id", h.UpdateShop)
     auth.DELETE("/shops/:id", h.DeleteShop)
+    // renewals
+    auth.POST("/shops/:id/renew", h.RenewShop)
+    auth.GET("/shops/:id/renewals", h.ListRenewals)
 
     if shopCustH != nil {
         auth.POST("/shops/:id/customers", shopCustH.Assign)

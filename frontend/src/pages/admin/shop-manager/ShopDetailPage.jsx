@@ -9,7 +9,7 @@ import {
   ToolbarHeading,
   ToolbarPageTitle,
 } from '@/components/layouts/layout-1/components/toolbar';
-import { getShop } from '@/api/shops';
+import { getShop, listShopRenewals, renewShop } from '@/api/shops';
 import ShopCustomersSection from './ShopCustomersSection';
 
 export default function ShopDetailPage() {
@@ -17,6 +17,9 @@ export default function ShopDetailPage() {
   const [shop, setShop] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [months, setMonths] = useState(1);
+  const [renewals, setRenewals] = useState([]);
+  const [renewing, setRenewing] = useState(false);
 
   const fetchShop = async () => {
     try {
@@ -31,10 +34,36 @@ export default function ShopDetailPage() {
     }
   };
 
+  const fetchRenewals = async () => {
+    try {
+      const data = await listShopRenewals(id);
+      setRenewals(Array.isArray(data) ? data : []);
+    } catch (e) {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     fetchShop();
+    fetchRenewals();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  const onRenew = async () => {
+    const m = parseInt(months, 10) || 0;
+    if (m <= 0) return alert('Số tháng phải > 0');
+    try {
+      setRenewing(true);
+      const res = await renewShop(id, m);
+      if (res?.shop) setShop(res.shop);
+      await fetchRenewals();
+      alert('Gia hạn thành công');
+    } catch (e) {
+      alert(e?.response?.data?.error || 'Gia hạn thất bại');
+    } finally {
+      setRenewing(false);
+    }
+  };
 
   return (
     <Fragment>
@@ -79,6 +108,72 @@ export default function ShopDetailPage() {
           </div>
         </div>
 
+        {shop && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+            <div className="card-container">
+              <div className="card-header">
+                <div className="card-title">Gia hạn</div>
+              </div>
+              <div className="card-content">
+                <div className="flex items-end gap-3">
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">
+                      Số tháng
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      className="input input-sm w-28"
+                      value={months}
+                      onChange={(e) => setMonths(e.target.value)}
+                    />
+                  </div>
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={onRenew}
+                    disabled={renewing}
+                  >
+                    {renewing ? 'Đang gia hạn...' : 'Gia hạn'}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="card-container">
+              <div className="card-header">
+                <div className="card-title">Lịch sử gia hạn</div>
+              </div>
+              <div className="card-content">
+                {renewals.length === 0 ? (
+                  <div className="text-sm text-muted-foreground">Chưa có</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="table table-sm">
+                      <thead>
+                        <tr>
+                          <th>Thời gian</th>
+                          <th>Tháng</th>
+                          <th>Hết hạn cũ</th>
+                          <th>Hết hạn mới</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {renewals.map((r) => (
+                          <tr key={r.id}>
+                            <td>{formatDateTime(r.created_at)}</td>
+                            <td>{r.months}</td>
+                            <td>{r.old_expired_at ? formatDate(new Date(r.old_expired_at)) : '-'}</td>
+                            <td>{formatDate(new Date(r.new_expired_at))}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {shop && <ShopCustomersSection shop={shop} />}
       </Container>
     </Fragment>
@@ -99,4 +194,18 @@ function formatDate(d) {
   const m = String(d.getUTCMonth() + 1).padStart(2, '0');
   const day = String(d.getUTCDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
+}
+
+function formatDateTime(ts) {
+  try {
+    const d = new Date(ts);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return `${y}-${m}-${day} ${hh}:${mm}`;
+  } catch {
+    return String(ts ?? '');
+  }
 }

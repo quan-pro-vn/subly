@@ -33,13 +33,14 @@ func main() {
     userRepo := repository.NewUserRepository(db)
     tokenRepo := repository.NewTokenRepository(db)
     shopRepo := repository.NewShopRepository(db)
+    shopRenewalRepo := repository.NewShopRenewalRepository(db)
     customerRepo := repository.NewCustomerRepository(db)
 
     authService := service.NewAuthService(userRepo, tokenRepo)
     authHandler := handler.NewAuthHandler(authService)
     userService := service.NewUserService(userRepo)
     userHandler := handler.NewUserHandler(userService)
-    shopService := service.NewShopService(shopRepo)
+    shopService := service.NewShopService(shopRepo).WithRenewalRepo(shopRenewalRepo)
     shopHandler := handler.NewShopHandler(shopService)
     // Shop-Customer membership wiring
     custShopRepo := repository.NewCustomerShopRepository(db)
