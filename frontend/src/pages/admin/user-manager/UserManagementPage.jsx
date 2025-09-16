@@ -2,6 +2,7 @@ import { Fragment, useState } from 'react';
 import { createUser } from '@/api/users';
 import { toast } from 'sonner';
 import { Container } from '@/components/common/container';
+import PageTitle from '@/components/common/page-title';
 import {
   Toolbar,
   ToolbarActions,
@@ -35,6 +36,7 @@ export const UserManagementPage = () => {
 
   return (
     <Fragment>
+      <PageTitle title="User Management" />
       <Container>
         <Toolbar>
           <ToolbarHeading>

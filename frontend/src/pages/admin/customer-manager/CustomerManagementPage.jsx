@@ -1,6 +1,7 @@
 import { CustomerManagementContent } from './CustomerManagementContent';
 import { useState, Fragment } from 'react';
 import { Container } from '@/components/common/container';
+import PageTitle from '@/components/common/page-title';
 import {
   Toolbar,
   ToolbarActions,
@@ -15,6 +16,7 @@ export const CustomerManagementPage = () => {
 
   return (
     <Fragment>
+      <PageTitle title="Customer Management" />
       <Container>
         <Toolbar>
           <ToolbarHeading>

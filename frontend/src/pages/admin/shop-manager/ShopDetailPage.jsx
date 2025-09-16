@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Container } from '@/components/common/container';
+import PageTitle from '@/components/common/page-title';
 import {
   Toolbar,
   ToolbarActions,
@@ -37,6 +38,7 @@ export default function ShopDetailPage() {
 
   return (
     <Fragment>
+      <PageTitle title="Chi tiết shop" />
       <Container>
         <Toolbar>
           <ToolbarHeading>
@@ -98,4 +100,3 @@ function formatDate(d) {
   const day = String(d.getUTCDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 }
-

@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useState } from 'react';
 import { createShop, listShops } from '@/api/shops';
 import { toast } from 'sonner';
 import { Container } from '@/components/common/container';
+import PageTitle from '@/components/common/page-title';
 import {
   Toolbar,
   ToolbarActions,
@@ -77,6 +78,7 @@ export const ShopManagementPage = () => {
 
   return (
     <Fragment>
+      <PageTitle title="Shop Management" />
       <Container>
         <Toolbar>
           <ToolbarHeading>

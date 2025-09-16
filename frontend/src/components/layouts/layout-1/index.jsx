@@ -4,7 +4,7 @@ import { Main } from './components/main';
 export function Layout1() {
   return (
     <>
-      <title>Metronic - Layout 1</title>
+      <title>{import.meta.env.VITE_APP_NAME || 'Application'}</title>
 
       <LayoutProvider>
         <Main />
