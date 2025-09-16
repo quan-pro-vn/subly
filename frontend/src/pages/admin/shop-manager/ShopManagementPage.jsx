@@ -1,6 +1,6 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { createShop, listShops } from '@/api/shops';
+import { createShop } from '@/api/shops';
 import { toast } from 'sonner';
 import { Container } from '@/components/common/container';
 import PageTitle from '@/components/common/page-title';
@@ -11,7 +11,7 @@ import {
   ToolbarHeading,
   ToolbarPageTitle,
 } from '@/components/layouts/layout-1/components/toolbar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+// Sidebar now hosts filters; no local tabs/dropdown needed
 import { ShopManagementContent } from './ShopManagementContent';
 import ShopModal from './ShopModal';
 
@@ -21,52 +21,20 @@ export const ShopManagementPage = () => {
   const { pathname } = useLocation();
   const initialTab = pathname.endsWith('/expiring') ? 'expiring' : 'notOver1y';
   const [tab, setTab] = useState(initialTab);
-  const [allShops, setAllShops] = useState([]);
-  const [loadingCount, setLoadingCount] = useState(false);
 
+  // Keep `tab` in sync with pathname (sidebar submenu routes)
   useEffect(() => {
-    const run = async () => {
-      try {
-        setLoadingCount(true);
-        const data = await listShops();
-        setAllShops(Array.isArray(data) ? data : []);
-      } finally {
-        setLoadingCount(false);
-      }
+    const mapPathToTab = () => {
+      if (pathname.endsWith('/all')) return 'all';
+      if (pathname.endsWith('/valid')) return 'valid';
+      if (pathname.endsWith('/expiring')) return 'expiring';
+      if (pathname.endsWith('/expired')) return 'expired';
+      if (pathname.endsWith('/not-over-1y')) return 'notOver1y';
+      if (pathname.endsWith('/shop-management')) return 'notOver1y';
+      return 'notOver1y';
     };
-    run();
-  }, [refreshKey]);
-
-  const counts = useMemo(() => {
-    const dayMs = 1000 * 60 * 60 * 24;
-    const now = new Date();
-    const expiringThresholdDays = 30;
-    let all = 0,
-      valid = 0,
-      expired = 0,
-      notOver1y = 0,
-      expiring = 0;
-    (allShops || []).forEach((it) => {
-      all += 1;
-      const exp = it.expired_at ? new Date(it.expired_at) : null;
-      const isValid = !exp || exp.getTime() - now.getTime() >= 0;
-      if (isValid) {
-        valid += 1;
-        notOver1y += 1; // valid always included in not-over-1y
-        if (exp) {
-          const days = (exp.getTime() - now.getTime()) / dayMs;
-          if (days >= 0 && days <= expiringThresholdDays) expiring += 1;
-        }
-      } else {
-        expired += 1;
-        if (exp) {
-          const overDays = (now.getTime() - exp.getTime()) / dayMs;
-          if (overDays <= 365) notOver1y += 1;
-        }
-      }
-    });
-    return { all, valid, expired, notOver1y, expiring };
-  }, [allShops]);
+    setTab(mapPathToTab());
+  }, [pathname]);
 
   const openCreate = () => setCreating(true);
   const closeCreate = () => setCreating(false);
@@ -109,46 +77,9 @@ export const ShopManagementPage = () => {
       </Container>
 
       <Container>
-        <Tabs value={tab} onValueChange={setTab} className="w-full">
-          <TabsList variant="line" className="w-full mb-4">
-            <TabsTrigger value="notOver1y">
-              Không quá 1 năm
-              <span className="ml-2 badge">{counts.notOver1y}</span>
-            </TabsTrigger>
-            <TabsTrigger value="all">
-              Tất cả
-              <span className="ml-2 badge">{counts.all}</span>
-            </TabsTrigger>
-            <TabsTrigger value="expiring">
-              Sắp hết hạn
-              <span className="ml-2 badge badge-warning">{counts.expiring}</span>
-            </TabsTrigger>
-            <TabsTrigger value="valid">
-              Còn hạn
-              <span className="ml-2 badge badge-success">{counts.valid}</span>
-            </TabsTrigger>
-            <TabsTrigger value="expired">
-              Hết hạn
-              <span className="ml-2 badge badge-danger">{counts.expired}</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="notOver1y" className="mt-0">
-            <ShopManagementContent refreshKey={refreshKey} filter="notOver1y" />
-          </TabsContent>
-          <TabsContent value="all" className="mt-0">
-            <ShopManagementContent refreshKey={refreshKey} filter="all" />
-          </TabsContent>
-          <TabsContent value="valid" className="mt-0">
-            <ShopManagementContent refreshKey={refreshKey} filter="valid" />
-          </TabsContent>
-          <TabsContent value="expiring" className="mt-0">
-            <ShopManagementContent refreshKey={refreshKey} filter="expiring" />
-          </TabsContent>
-          <TabsContent value="expired" className="mt-0">
-            <ShopManagementContent refreshKey={refreshKey} filter="expired" />
-          </TabsContent>
-        </Tabs>
+        <div className="mt-0">
+          <ShopManagementContent refreshKey={refreshKey} filter={tab} />
+        </div>
       </Container>
 
       <ShopModal

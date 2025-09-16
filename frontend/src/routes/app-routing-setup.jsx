@@ -20,7 +20,11 @@ export function AppRoutingSetup() {
           <Route element={<RequireRole roles={["admin"]} />}>
             <Route path="/user-management" element={<UserManagementPage />} />
             <Route path="/shop-management" element={<ShopManagementPage />} />
+            <Route path="/shop-management/not-over-1y" element={<ShopManagementPage />} />
+            <Route path="/shop-management/all" element={<ShopManagementPage />} />
+            <Route path="/shop-management/valid" element={<ShopManagementPage />} />
             <Route path="/shop-management/expiring" element={<ShopManagementPage />} />
+            <Route path="/shop-management/expired" element={<ShopManagementPage />} />
             <Route path="/shops/:id" element={<ShopDetailPage />} />
             <Route path="/customer-management" element={<CustomerManagementPage />} />
           </Route>

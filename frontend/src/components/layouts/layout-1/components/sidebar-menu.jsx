@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { MENU_SIDEBAR } from '@/config/layout-1.config';
 import { cn } from '@/lib/utils';
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/accordion-menu';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { listShops } from '@/api/shops';
 
 export function SidebarMenu() {
   const { pathname } = useLocation();
@@ -46,6 +47,48 @@ export function SidebarMenu() {
   };
 
   const userRoles = (currentUser?.roles || []).map((r) => r.name);
+
+  // Sidebar badges for Shop Management filters
+  const [shopCounts, setShopCounts] = useState(null);
+  useEffect(() => {
+    let ignore = false;
+    const run = async () => {
+      try {
+        const shops = await listShops();
+        if (ignore) return;
+        const dayMs = 1000 * 60 * 60 * 24;
+        const now = new Date();
+        const expiringThresholdDays = 30;
+        const counts = { all: 0, valid: 0, expired: 0, notOver1y: 0, expiring: 0 };
+        (Array.isArray(shops) ? shops : []).forEach((it) => {
+          counts.all += 1;
+          const exp = it.expired_at ? new Date(it.expired_at) : null;
+          const isValid = !exp || exp.getTime() - now.getTime() >= 0;
+          if (isValid) {
+            counts.valid += 1;
+            counts.notOver1y += 1;
+            if (exp) {
+              const days = (exp.getTime() - now.getTime()) / dayMs;
+              if (days >= 0 && days <= expiringThresholdDays) counts.expiring += 1;
+            }
+          } else {
+            counts.expired += 1;
+            if (exp) {
+              const overDays = (now.getTime() - exp.getTime()) / dayMs;
+              if (overDays <= 365) counts.notOver1y += 1;
+            }
+          }
+        });
+        setShopCounts(counts);
+      } catch (e) {
+        // ignore
+      }
+    };
+    run();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const canSee = (item) => {
     if (Array.isArray(item.requireRoles) && item.requireRoles.length > 0) {
@@ -212,7 +255,16 @@ export function SidebarMenu() {
           value={item.path || ''}
           className="text-[13px]"
         >
-          <Link to={item.path || '#'}>{item.title}</Link>
+          <div className="flex items-center gap-2 w-full">
+            <Link to={item.path || '#'} className="truncate">
+              {item.title}
+            </Link>
+            {item.filterKey && (
+              <Badge variant="secondary" size="sm" className="ms-auto">
+                {shopCounts?.[item.filterKey] ?? 0}
+              </Badge>
+            )}
+          </div>
         </AccordionMenuItem>
       );
     }
