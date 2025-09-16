@@ -142,6 +142,9 @@ export const ShopManagementPage = () => {
           <TabsContent value="valid" className="mt-0">
             <ShopManagementContent refreshKey={refreshKey} filter="valid" />
           </TabsContent>
+          <TabsContent value="expiring" className="mt-0">
+            <ShopManagementContent refreshKey={refreshKey} filter="expiring" />
+          </TabsContent>
           <TabsContent value="expired" className="mt-0">
             <ShopManagementContent refreshKey={refreshKey} filter="expired" />
           </TabsContent>
@@ -158,6 +161,3 @@ export const ShopManagementPage = () => {
     </Fragment>
   );
 };
-          <TabsContent value="expiring" className="mt-0">
-            <ShopManagementContent refreshKey={refreshKey} filter="expiring" />
-          </TabsContent>
