@@ -35,6 +35,7 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
     if (filter === 'all') return items;
     const now = new Date();
     const dayMs = 1000 * 60 * 60 * 24;
+    const expiringThresholdDays = 30;
     const parsed = items
       .map((it) => ({
         it,
@@ -51,6 +52,12 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
           if (!exp) return true; // defensive; treat no-expiry as valid
           const overDays = (now.getTime() - exp.getTime()) / dayMs;
           return overDays <= 365;
+        }
+        if (filter === 'expiring') {
+          // expiring soon: has expiry within next N days
+          if (!exp) return false; // must have expiry date
+          const days = (exp.getTime() - now.getTime()) / dayMs;
+          return days >= 0 && days <= expiringThresholdDays;
         }
         return true;
       });
@@ -83,6 +90,10 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
       });
       recents.sort((a, b) => b.exp.getTime() - a.exp.getTime());
       return [...valids, ...recents].map(({ it }) => it);
+    } else if (filter === 'expiring') {
+      // Sort ascending by expiry date
+      parsed.sort((a, b) => a.exp.getTime() - b.exp.getTime());
+      return parsed.map(({ it }) => it);
     }
 
     return parsed.map(({ it }) => it);

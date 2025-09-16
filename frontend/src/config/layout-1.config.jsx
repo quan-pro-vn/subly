@@ -64,6 +64,10 @@ export const MENU_SIDEBAR = [
     icon: Building,
     path: '/shop-management',
     requireRoles: ['admin'],
+    children: [
+      { title: 'Tổng quan', path: '/shop-management' },
+      { title: 'Shop sắp hết hạn', path: '/shop-management/expiring' },
+    ],
   },
   {
     title: 'Customer Management',
