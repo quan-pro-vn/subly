@@ -14,6 +14,7 @@ import {
   PaginationItem,
   PaginationEllipsis,
 } from '@/components/ui/pagination';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const PAGE_SIZE = 50;
 
@@ -175,9 +176,23 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={6}>Đang tải...</td>
-                </tr>
+                Array.from({ length: Math.min(8, PAGE_SIZE) }).map((_, i) => (
+                  <tr key={`sk-${i}`}>
+                    <td className="py-3"><Skeleton className="h-4 w-[220px]" /></td>
+                    <td><Skeleton className="h-4 w-[180px]" /></td>
+                    <td><Skeleton className="h-4 w-[120px]" /></td>
+                    <td><Skeleton className="h-5 w-[90px] rounded-full" /></td>
+                    <td><Skeleton className="h-4 w-[60px]" /></td>
+                    <td>
+                      <div className="flex gap-2">
+                        <Skeleton className="h-8 w-16" />
+                        <Skeleton className="h-8 w-12" />
+                        <Skeleton className="h-8 w-16" />
+                        <Skeleton className="h-8 w-12" />
+                      </div>
+                    </td>
+                  </tr>
+                ))
               ) : filteredItems.length === 0 ? (
                 <tr>
                   <td colSpan={6}>Không có shop</td>
