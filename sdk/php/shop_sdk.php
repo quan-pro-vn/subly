@@ -4,7 +4,7 @@
  *
  * Usage (no Composer required):
  *   require_once __DIR__ . '/shop_sdk.php';
- *   $client = new ShopExpiryClient('https://your-backend-host');
+ *   $client = new ShopExpiryClient();
  *   $res = $client->checkByDomain('abcshop.vn');
  *   if ($res['status'] === 'valid') 
  *
@@ -12,7 +12,7 @@
  *   GET {BASE}/api/shops/check?domain=... | shop_uuid=...
  */
 
-// Default production base URL
+// Default production base URL (fixed)
 if (!defined('SUBLY_BASE_URL')) {
     define('SUBLY_BASE_URL', 'https://subly.quan.pro.vn');
 }
@@ -141,17 +141,17 @@ if (!function_exists('shop_check_status')) {
      * @param string|null $uuid
      * @param array $options same as ShopExpiryClient ctor options
      */
-    function shop_check_status(string $baseUrl = SUBLY_BASE_URL, ?string $domain = null, ?string $uuid = null, array $options = []): array
+    function shop_check_status(?string $domain = null, ?string $uuid = null, array $options = []): array
     {
-        $c = new ShopExpiryClient($baseUrl, $options);
+        $c = new ShopExpiryClient(SUBLY_BASE_URL, $options);
         return $c->check($domain, $uuid);
     }
 }
 
 if (!function_exists('shop_is_valid')) {
-    function shop_is_valid(string $baseUrl = SUBLY_BASE_URL, ?string $domain = null, ?string $uuid = null, array $options = []): bool
+    function shop_is_valid(?string $domain = null, ?string $uuid = null, array $options = []): bool
     {
-        $c = new ShopExpiryClient($baseUrl, $options);
+        $c = new ShopExpiryClient(SUBLY_BASE_URL, $options);
         return $c->isValid($domain, $uuid);
     }
 }
@@ -166,21 +166,21 @@ if (!function_exists('shop_check_auto')) {
      * @param array $options
      * @return array
      */
-    function shop_check_auto(string $baseUrl = SUBLY_BASE_URL, array $options = []): array
+    function shop_check_auto(array $options = []): array
     {
         $uuid = _shop_env('SUBLY_SHOP_UUID') ?? _shop_env('SHOP_UUID');
         $domain = null;
         if (!$uuid) {
             $domain = _shop_current_host();
         }
-        return shop_check_status($baseUrl, $domain, $uuid, $options);
+        return shop_check_status($domain, $uuid, $options);
     }
 }
 
 if (!function_exists('shop_is_valid_auto')) {
-    function shop_is_valid_auto(string $baseUrl = SUBLY_BASE_URL, array $options = []): bool
+    function shop_is_valid_auto(array $options = []): bool
     {
-        $res = shop_check_auto($baseUrl, $options);
+        $res = shop_check_auto($options);
         return isset($res['status']) && $res['status'] === 'valid';
     }
 }
