@@ -20,6 +20,58 @@ export default function ShopDetailPage() {
   const [months, setMonths] = useState(12);
   const [nextDate, setNextDate] = useState('');
   const [note, setNote] = useState('');
+  const monthlyPrice = useMemo(() => {
+    if (!shop) return 0;
+    const price = Number(shop.price_per_cycle || 0);
+    const cycle = Number(shop.cycle_months || 12);
+    return cycle > 0 ? price / cycle : 0;
+  }, [shop]);
+
+  const estimate = useMemo(() => {
+    if (!shop) return null;
+    const price = Number(shop.price_per_cycle || 0);
+    const cycle = Number(shop.cycle_months || 12);
+    if (price <= 0 || cycle <= 0) return null;
+    const base = (() => {
+      const now = new Date();
+      if (shop.expired_at) {
+        const exp = new Date(shop.expired_at);
+        return exp.getTime() > now.getTime() ? exp : now;
+      }
+      return now;
+    })();
+    let monthsToCharge = 0;
+    if (nextDate) {
+      try {
+        const target = new Date(nextDate + 'T00:00:00Z');
+        // approximate months: difference in year*12 + month, bump if addMonths(base, months)<target
+        const diff = (target.getUTCFullYear() - base.getUTCFullYear()) * 12 + (target.getUTCMonth() - base.getUTCMonth());
+        const addMonths = (dt, n) => {
+          const y = dt.getUTCFullYear();
+          const m = dt.getUTCMonth();
+          const d = dt.getUTCDate();
+          const ny = y + Math.floor((m + n) / 12);
+          const nm = (m + n) % 12;
+          const firstOfNext = new Date(Date.UTC(ny, nm + 1, 1));
+          const lastDay = new Date(firstOfNext.getTime() - 24 * 60 * 60 * 1000).getUTCDate();
+          const nd = Math.min(d, lastDay);
+          return new Date(Date.UTC(ny, nm, nd, dt.getUTCHours(), dt.getUTCMinutes(), dt.getUTCSeconds()));
+        };
+        let m = Math.max(0, diff);
+        if (addMonths(base, m).getTime() < target.getTime()) m++;
+        monthsToCharge = m;
+      } catch {
+        monthsToCharge = 0;
+      }
+    } else {
+      monthsToCharge = Math.max(0, parseInt(months, 10) || 0);
+    }
+    const est = Math.round((price / cycle) * monthsToCharge);
+    return {
+      months: monthsToCharge,
+      amount: est,
+    };
+  }, [shop, months, nextDate]);
   const [renewals, setRenewals] = useState([]);
   const [renewing, setRenewing] = useState(false);
 
@@ -162,6 +214,22 @@ export default function ShopDetailPage() {
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
                     />
+                  </div>
+                  <div className="md:col-span-3 text-sm text-muted-foreground">
+                    {estimate && estimate.months > 0 ? (
+                      <span>
+                        Ước tính: <b>{estimate.amount.toLocaleString('vi-VN')} ₫</b>
+                        {monthlyPrice > 0 && (
+                          <>
+                            {' '}
+                            (<span>{estimate.months}</span> tháng ×{' '}
+                            <span>{Math.round(monthlyPrice).toLocaleString('vi-VN')} ₫/tháng</span>)
+                          </>
+                        )}
+                      </span>
+                    ) : (
+                      <span>Nhập số tháng hoặc chọn ngày để ước tính chi phí.</span>
+                    )}
                   </div>
                   <div>
                     <button
