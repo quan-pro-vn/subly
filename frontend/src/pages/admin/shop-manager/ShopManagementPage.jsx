@@ -1,5 +1,5 @@
-import { Fragment, useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Fragment, useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { createShop } from '@/api/shops';
 import { toast } from 'sonner';
 import { Container } from '@/components/common/container';
@@ -18,24 +18,22 @@ import ShopModal from './ShopModal';
 export const ShopManagementPage = () => {
   const [creating, setCreating] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const { pathname } = useLocation();
-  const initialTab = pathname.endsWith('/expiring') ? 'expiring' : 'notOver1y';
-  const [tab, setTab] = useState(initialTab);
-
-  // Keep `tab` in sync with pathname (sidebar submenu routes)
-  useEffect(() => {
-    const mapPathToTab = () => {
-      if (pathname.endsWith('/all')) return 'all';
-      if (pathname.endsWith('/valid')) return 'valid';
-      if (pathname.endsWith('/expiring')) return 'expiring';
-      if (pathname.endsWith('/expired')) return 'expired';
-      if (pathname.endsWith('/trashed')) return 'trashed';
-      if (pathname.endsWith('/not-over-1y')) return 'notOver1y';
-      if (pathname.endsWith('/shop-management')) return 'notOver1y';
-      return 'notOver1y';
-    };
-    setTab(mapPathToTab());
-  }, [pathname]);
+  const { filterKey } = useParams();
+  const tab = useMemo(() => {
+    switch (filterKey) {
+      case 'all':
+      case 'valid':
+      case 'expired':
+      case 'expiring':
+      case 'trashed':
+        return filterKey;
+      case 'not-over-1y':
+        return 'notOver1y';
+      case undefined:
+      default:
+        return 'notOver1y';
+    }
+  }, [filterKey]);
 
   const openCreate = () => setCreating(true);
   const closeCreate = () => setCreating(false);
