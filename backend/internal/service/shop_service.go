@@ -20,14 +20,20 @@ func NewShopService(r *repository.ShopRepository) *ShopService {
     return &ShopService{shops: r}
 }
 
-func (s *ShopService) Create(domain string, expiredAt *time.Time) (*model.Shop, error) {
+func (s *ShopService) Create(domain string, expiredAt *time.Time, pricePerCycle int, cycleMonths int) (*model.Shop, error) {
     // Ensure unique domain
     if _, err := s.shops.FindByDomain(domain); err == nil {
         return nil, errors.New("domain already exists")
     } else if !errors.Is(err, gorm.ErrRecordNotFound) {
         return nil, err
     }
-    m := &model.Shop{Domain: domain, Active: true, ExpiredAt: expiredAt}
+    if pricePerCycle <= 0 {
+        pricePerCycle = 2000000
+    }
+    if cycleMonths <= 0 {
+        cycleMonths = 12
+    }
+    m := &model.Shop{Domain: domain, Active: true, ExpiredAt: expiredAt, PricePerCycle: pricePerCycle, CycleMonths: cycleMonths}
     if err := s.shops.Create(m); err != nil {
         return nil, err
     }
@@ -106,6 +112,25 @@ func (s *ShopService) Update(id uint, domain string, expiredAt *time.Time) (*mod
         // allow setting to null by sending null
         m.ExpiredAt = expiredAt
     }
+    // price/cycle are updated via specialized method to keep signature minimal
+    if err := s.shops.Update(m); err != nil {
+        return nil, err
+    }
+    return m, nil
+}
+
+// UpdateBilling updates price per cycle and cycle months
+func (s *ShopService) UpdateBilling(id uint, pricePerCycle, cycleMonths *int) (*model.Shop, error) {
+    m, err := s.shops.FindByID(id)
+    if err != nil {
+        return nil, err
+    }
+    if pricePerCycle != nil && *pricePerCycle > 0 {
+        m.PricePerCycle = *pricePerCycle
+    }
+    if cycleMonths != nil && *cycleMonths > 0 {
+        m.CycleMonths = *cycleMonths
+    }
     if err := s.shops.Update(m); err != nil {
         return nil, err
     }
@@ -149,6 +174,51 @@ func (s *ShopService) Renew(shopID uint, months int, performedBy uint, note *str
         Months:      months,
         OldExpiredAt: old,
         NewExpiredAt: newExp,
+        Note:        note,
+        PerformedBy: performedBy,
+    }
+    if s.renewals != nil {
+        if err := s.renewals.Create(rec); err != nil {
+            return nil, nil, err
+        }
+    }
+    return m, rec, nil
+}
+
+// RenewToDate sets new expiration to target date and records months approximated
+func (s *ShopService) RenewToDate(shopID uint, target time.Time, performedBy uint, note *string) (*model.Shop, *model.ShopRenewal, error) {
+    m, err := s.shops.FindByID(shopID)
+    if err != nil {
+        return nil, nil, err
+    }
+    now := time.Now()
+    var base time.Time
+    if m.ExpiredAt != nil && m.ExpiredAt.After(now) {
+        base = *m.ExpiredAt
+    } else {
+        base = now
+    }
+    // normalize target to same location as base
+    target = time.Date(target.Year(), target.Month(), target.Day(), base.Hour(), base.Minute(), base.Second(), base.Nanosecond(), base.Location())
+    if !target.After(base) {
+        return nil, nil, errors.New("target must be after current expiry or now")
+    }
+    // approximate months between base and target
+    months := (int(target.Year())-int(base.Year()))*12 + (int(target.Month()) - int(base.Month()))
+    // ensure addMonths(base, months) >= target; bump if needed
+    if addMonths(base, months).Before(target) {
+        months++
+    }
+    old := m.ExpiredAt
+    m.ExpiredAt = &target
+    if err := s.shops.Update(m); err != nil {
+        return nil, nil, err
+    }
+    rec := &model.ShopRenewal{
+        ShopID:      m.ID,
+        Months:      months,
+        OldExpiredAt: old,
+        NewExpiredAt: target,
         Note:        note,
         PerformedBy: performedBy,
     }

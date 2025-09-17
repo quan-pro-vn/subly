@@ -154,6 +154,8 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
       expired_at: editing.expired_at
         ? formatDate(new Date(editing.expired_at))
         : '',
+      price_per_cycle: editing.price_per_cycle || 2000000,
+      cycle_months: editing.cycle_months || 12,
     };
   }, [editing]);
 

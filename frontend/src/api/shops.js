@@ -45,10 +45,9 @@ export function assignShopCustomer(shopId, payload) {
   return http.post(`/shops/${shopId}/customers`, payload);
 }
 
-export function renewShop(id, months, note) {
-  return http
-    .post(`/shops/${id}/renew`, { months, note })
-    .then((r) => r.data);
+export function renewShop(id, payload) {
+  // payload can be { months, note } or { next_expired_at, note }
+  return http.post(`/shops/${id}/renew`, payload).then((r) => r.data);
 }
 
 export function listShopRenewals(id) {

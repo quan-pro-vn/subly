@@ -15,6 +15,10 @@ const createSchema = z.object({
       (v) => !v || /^\d{4}-\d{2}-\d{2}$/.test(v),
       'Ngày hết hạn không hợp lệ (YYYY-MM-DD)'
     ),
+  price_per_cycle: z
+    .preprocess((v) => (v === '' || v === undefined ? undefined : Number(v)), z.number().int().positive('Giá phải > 0').optional()),
+  cycle_months: z
+    .preprocess((v) => (v === '' || v === undefined ? undefined : Number(v)), z.number().int().positive('Kỳ (tháng) > 0').optional()),
 });
 
 const editSchema = createSchema;
@@ -22,7 +26,7 @@ const editSchema = createSchema;
 export default function ShopModal({
   isOpen,
   mode = 'create',
-  defaultValues = { domain: '', expired_at: '' },
+  defaultValues = { domain: '', expired_at: '', price_per_cycle: 2000000, cycle_months: 12 },
   original = null,
   onClose,
   onSubmit,
@@ -65,6 +69,12 @@ export default function ShopModal({
         ? new Date(values.expired_at + 'T00:00:00Z').toISOString()
         : null;
     }
+    if (values.price_per_cycle && values.price_per_cycle !== original.price_per_cycle) {
+      payload.price_per_cycle = values.price_per_cycle;
+    }
+    if (values.cycle_months && values.cycle_months !== original.cycle_months) {
+      payload.cycle_months = values.cycle_months;
+    }
     return payload;
   }, [values, mode, original]);
 
@@ -85,6 +95,8 @@ export default function ShopModal({
       payload.expired_at = values.expired_at
         ? new Date(values.expired_at + 'T00:00:00Z').toISOString()
         : null;
+      if (values.price_per_cycle) payload.price_per_cycle = values.price_per_cycle;
+      if (values.cycle_months) payload.cycle_months = values.cycle_months;
     }
     await onSubmit?.(payload);
     onClose?.();
@@ -127,6 +139,37 @@ export default function ShopModal({
                 {errors.expired_at.message}
               </p>
             )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm mb-1">Giá/ kỳ (VND)</label>
+              <input
+                type="number"
+                min={1}
+                className="input input-bordered w-full"
+                {...register('price_per_cycle')}
+              />
+              {errors.price_per_cycle && (
+                <p className="mt-1 text-xs text-red-600">
+                  {errors.price_per_cycle.message}
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm mb-1">Kỳ (tháng)</label>
+              <input
+                type="number"
+                min={1}
+                className="input input-bordered w-full"
+                {...register('cycle_months')}
+              />
+              {errors.cycle_months && (
+                <p className="mt-1 text-xs text-red-600">
+                  {errors.cycle_months.message}
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

@@ -16,6 +16,8 @@ type Shop struct {
     Domain    string     `gorm:"uniqueIndex;size:255" json:"domain"`
     Active    bool       `gorm:"default:true" json:"active"`
     ExpiredAt *time.Time `json:"expired_at"`
+    PricePerCycle int    `gorm:"default:2000000" json:"price_per_cycle"`
+    CycleMonths   int    `gorm:"default:12" json:"cycle_months"`
     CreatedAt time.Time  `json:"-"`
     UpdatedAt time.Time  `json:"-"`
     DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`

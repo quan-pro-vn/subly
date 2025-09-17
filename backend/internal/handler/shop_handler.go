@@ -8,6 +8,7 @@ import (
     "github.com/gin-gonic/gin"
 
     "metronic/internal/service"
+    "metronic/internal/model"
 )
 
 // ShopHandler handles HTTP requests for shops
@@ -24,12 +25,18 @@ func (h *ShopHandler) CreateShop(c *gin.Context) {
     var req struct {
         Domain    string     `json:"domain" binding:"required"`
         ExpiredAt *time.Time `json:"expired_at"`
+        PricePerCycle *int   `json:"price_per_cycle"`
+        CycleMonths   *int   `json:"cycle_months"`
     }
     if err := c.ShouldBindJSON(&req); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
-    m, err := h.svc.Create(req.Domain, req.ExpiredAt)
+    price := 0
+    if req.PricePerCycle != nil { price = *req.PricePerCycle }
+    cycle := 0
+    if req.CycleMonths != nil { cycle = *req.CycleMonths }
+    m, err := h.svc.Create(req.Domain, req.ExpiredAt, price, cycle)
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
@@ -109,6 +116,8 @@ func (h *ShopHandler) UpdateShop(c *gin.Context) {
     var req struct {
         Domain    string     `json:"domain"`
         ExpiredAt *time.Time `json:"expired_at"`
+        PricePerCycle *int   `json:"price_per_cycle"`
+        CycleMonths   *int   `json:"cycle_months"`
     }
     if err := c.ShouldBindJSON(&req); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -118,6 +127,13 @@ func (h *ShopHandler) UpdateShop(c *gin.Context) {
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
+    }
+    if req.PricePerCycle != nil || req.CycleMonths != nil {
+        m, err = h.svc.UpdateBilling(uint(id), req.PricePerCycle, req.CycleMonths)
+        if err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+            return
+        }
     }
     c.JSON(http.StatusOK, m)
 }
@@ -172,8 +188,9 @@ func (h *ShopHandler) RenewShop(c *gin.Context) {
         return
     }
     var req struct {
-        Months int     `json:"months" binding:"required"`
-        Note   *string `json:"note"`
+        Months int      `json:"months"`
+        Note   *string  `json:"note"`
+        NextExpiredAt *time.Time `json:"next_expired_at"`
     }
     if err := c.ShouldBindJSON(&req); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -181,7 +198,16 @@ func (h *ShopHandler) RenewShop(c *gin.Context) {
     }
     uidRaw, _ := c.Get("userID")
     performedBy, _ := uidRaw.(uint)
-    shop, rec, err := h.svc.Renew(uint(id64), req.Months, performedBy, req.Note)
+    var shop *model.Shop
+    var rec *model.ShopRenewal
+    if req.NextExpiredAt != nil {
+        shop, rec, err = h.svc.RenewToDate(uint(id64), *req.NextExpiredAt, performedBy, req.Note)
+    } else if req.Months > 0 {
+        shop, rec, err = h.svc.Renew(uint(id64), req.Months, performedBy, req.Note)
+    } else {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "months or next_expired_at required"})
+        return
+    }
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return

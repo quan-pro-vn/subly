@@ -17,7 +17,9 @@ export default function ShopDetailPage() {
   const [shop, setShop] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [months, setMonths] = useState(1);
+  const [months, setMonths] = useState(12);
+  const [nextDate, setNextDate] = useState('');
+  const [note, setNote] = useState('');
   const [renewals, setRenewals] = useState([]);
   const [renewing, setRenewing] = useState(false);
 
@@ -51,10 +53,17 @@ export default function ShopDetailPage() {
 
   const onRenew = async () => {
     const m = parseInt(months, 10) || 0;
-    if (m <= 0) return alert('Số tháng phải > 0');
+    const hasDate = !!nextDate;
+    if (!hasDate && m <= 0) return alert('Số tháng phải > 0 hoặc chọn ngày');
     try {
       setRenewing(true);
-      const res = await renewShop(id, m);
+      let payload;
+      if (hasDate) {
+        payload = { next_expired_at: new Date(nextDate + 'T00:00:00Z').toISOString(), note: note || undefined };
+      } else {
+        payload = { months: m, note: note || undefined };
+      }
+      const res = await renewShop(id, payload);
       if (res?.shop) setShop(res.shop);
       await fetchRenewals();
       alert('Gia hạn thành công');
@@ -103,6 +112,9 @@ export default function ShopDetailPage() {
                 <Field label="Hết hạn">
                   {shop.expired_at ? formatDate(new Date(shop.expired_at)) : '-'}
                 </Field>
+                <Field label="Giá/ kỳ">
+                  {shop.price_per_cycle?.toLocaleString?.('vi-VN') || shop.price_per_cycle} ₫ / {shop.cycle_months || 12} tháng
+                </Field>
               </div>
             )}
           </div>
@@ -115,7 +127,7 @@ export default function ShopDetailPage() {
                 <div className="card-title">Gia hạn</div>
               </div>
               <div className="card-content">
-                <div className="flex items-end gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
                   <div>
                     <label className="block text-xs text-muted-foreground mb-1">
                       Số tháng
@@ -128,13 +140,38 @@ export default function ShopDetailPage() {
                       onChange={(e) => setMonths(e.target.value)}
                     />
                   </div>
-                  <button
-                    className="btn btn-sm btn-primary"
-                    onClick={onRenew}
-                    disabled={renewing}
-                  >
-                    {renewing ? 'Đang gia hạn...' : 'Gia hạn'}
-                  </button>
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">
+                      Đến ngày (ưu tiên)
+                    </label>
+                    <input
+                      type="date"
+                      className="input input-sm w-40"
+                      value={nextDate}
+                      onChange={(e) => setNextDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="md:col-span-3">
+                    <label className="block text-xs text-muted-foreground mb-1">
+                      Ghi chú
+                    </label>
+                    <input
+                      type="text"
+                      className="input input-sm w-full"
+                      placeholder="Ví dụ: Thu tiền gia hạn 12 tháng"
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <button
+                      className="btn btn-sm btn-primary"
+                      onClick={onRenew}
+                      disabled={renewing}
+                    >
+                      {renewing ? 'Đang gia hạn...' : 'Gia hạn'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
