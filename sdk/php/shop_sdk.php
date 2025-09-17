@@ -168,7 +168,7 @@ if (!function_exists('shop_check_auto')) {
      */
     function shop_check_auto(array $options = []): array
     {
-        $uuid = _shop_env('SUBLY_SHOP_UUID') ?? _shop_env('SHOP_UUID');
+        $uuid = _shop_env('SHOP_UUID');
         $domain = null;
         if (!$uuid) {
             $domain = _shop_current_host();

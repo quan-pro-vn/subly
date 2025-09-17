@@ -83,10 +83,10 @@ if (!class_exists('SublyShopClient')) {
 if (!function_exists('shop_check_auto_wp')) {
     function shop_check_auto_wp(array $options = []): array
     {
-        // Prefer constant in wp-config.php
-        $uuid = defined('SUBLY_SHOP_UUID') ? constant('SUBLY_SHOP_UUID') : null;
+        // Prefer constant in wp-config.php (SHOP_UUID only)
+        $uuid = defined('SHOP_UUID') ? constant('SHOP_UUID') : null;
         if (!$uuid && function_exists('getenv')) {
-            $uuid = getenv('SUBLY_SHOP_UUID') ?: getenv('SHOP_UUID') ?: null;
+            $uuid = getenv('SHOP_UUID') ?: null;
         }
         $domain = null;
         if (!$uuid) {
@@ -126,4 +126,3 @@ if (!function_exists('shop_is_valid_wp')) {
     function shop_is_valid_wp(?string $domain = null, ?string $uuid = null, array $options = []): bool
     { return (new SublyShopClient(SUBLY_BASE_URL, $options))->isValid($domain, $uuid); }
 }
-

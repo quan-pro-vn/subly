@@ -83,7 +83,7 @@ if (!class_exists('SublyShopClient')) {
 if (!function_exists('shop_check_auto_laravel')) {
     function shop_check_auto_laravel(array $options = []): array
     {
-        $uuid = function_exists('env') ? (env('SUBLY_SHOP_UUID') ?? env('SHOP_UUID')) : null;
+        $uuid = function_exists('env') ? env('SHOP_UUID') : null;
         $domain = null;
         if (!$uuid && function_exists('request')) {
             try { $domain = request()->getHost(); } catch (\Throwable $e) {}
@@ -107,4 +107,3 @@ if (!function_exists('shop_is_valid_laravel')) {
     function shop_is_valid_laravel(?string $domain = null, ?string $uuid = null, array $options = []): bool
     { return (new SublyShopClient(SUBLY_BASE_URL, $options))->isValid($domain, $uuid); }
 }
-

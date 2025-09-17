@@ -23,7 +23,7 @@ class PackageService
      */
     public function handle($request, Closure $next)
     {
-        $uuid = env('SUBLY_SHOP_UUID') ?? env('SHOP_UUID');
+        $uuid = env('SHOP_UUID');
         $domain = $uuid ? null : $this->currentHost($request);
 
         // Cache key theo UUID/host
@@ -103,4 +103,3 @@ class PackageService
         return $parts[0];
     }
 }
-
