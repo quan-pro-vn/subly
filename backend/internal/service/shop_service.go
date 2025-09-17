@@ -38,6 +38,53 @@ func (s *ShopService) List() ([]model.Shop, error) {
     return s.shops.List()
 }
 
+// ListPaged returns shops for a specific page and limit plus total count
+func (s *ShopService) ListPaged(page, limit int) ([]model.Shop, int64, error) {
+    return s.shops.ListPaged(page, limit)
+}
+
+// ListPagedFiltered returns filtered page of shops plus total
+func (s *ShopService) ListPagedFiltered(page, limit int, filter string) ([]model.Shop, int64, error) {
+    now := time.Now()
+    return s.shops.ListPagedFiltered(page, limit, filter, now)
+}
+
+// ShopStats mirrors repository stats
+type ShopStats struct {
+    All       int64 `json:"all"`
+    Valid     int64 `json:"valid"`
+    Expired   int64 `json:"expired"`
+    NotOver1y int64 `json:"notOver1y"`
+    Expiring  int64 `json:"expiring"`
+    Trashed   int64 `json:"trashed"`
+}
+
+func (s *ShopService) Stats() (ShopStats, error) {
+    now := time.Now()
+    rstats, err := s.shops.Stats(now)
+    if err != nil {
+        return ShopStats{}, err
+    }
+    return ShopStats{
+        All:       rstats.All,
+        Valid:     rstats.Valid,
+        Expired:   rstats.Expired,
+        NotOver1y: rstats.NotOver1y,
+        Expiring:  rstats.Expiring,
+        Trashed:   rstats.Trashed,
+    }, nil
+}
+
+// Restore brings back a soft-deleted shop
+func (s *ShopService) Restore(id uint) error {
+    return s.shops.RestoreByID(id)
+}
+
+// ForceDelete permanently deletes a shop
+func (s *ShopService) ForceDelete(id uint) error {
+    return s.shops.ForceDeleteByID(id)
+}
+
 func (s *ShopService) Get(id uint) (*model.Shop, error) {
     return s.shops.FindByID(id)
 }

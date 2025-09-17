@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/accordion-menu';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { listShops } from '@/api/shops';
+import { getShopStats } from '@/api/shops';
 
 export function SidebarMenu() {
   const { pathname } = useLocation();
@@ -54,32 +54,16 @@ export function SidebarMenu() {
     let ignore = false;
     const run = async () => {
       try {
-        const shops = await listShops();
+        const stats = await getShopStats();
         if (ignore) return;
-        const dayMs = 1000 * 60 * 60 * 24;
-        const now = new Date();
-        const expiringThresholdDays = 30;
-        const counts = { all: 0, valid: 0, expired: 0, notOver1y: 0, expiring: 0 };
-        (Array.isArray(shops) ? shops : []).forEach((it) => {
-          counts.all += 1;
-          const exp = it.expired_at ? new Date(it.expired_at) : null;
-          const isValid = !exp || exp.getTime() - now.getTime() >= 0;
-          if (isValid) {
-            counts.valid += 1;
-            counts.notOver1y += 1;
-            if (exp) {
-              const days = (exp.getTime() - now.getTime()) / dayMs;
-              if (days >= 0 && days <= expiringThresholdDays) counts.expiring += 1;
-            }
-          } else {
-            counts.expired += 1;
-            if (exp) {
-              const overDays = (now.getTime() - exp.getTime()) / dayMs;
-              if (overDays <= 365) counts.notOver1y += 1;
-            }
-          }
+        setShopCounts({
+          all: stats.all ?? 0,
+          valid: stats.valid ?? 0,
+          expired: stats.expired ?? 0,
+          notOver1y: stats.notOver1y ?? 0,
+          expiring: stats.expiring ?? 0,
+          trashed: stats.trashed ?? 0,
         });
-        setShopCounts(counts);
       } catch (e) {
         // ignore
       }

@@ -3,22 +3,44 @@ import {
   deleteShop as apiDeleteShop,
   updateShop as apiUpdateShop,
   listShops,
+  restoreShop as apiRestoreShop,
+  forceDeleteShop as apiForceDeleteShop,
 } from '@/api/shops';
 import { toast } from 'sonner';
 import ShopModal from './ShopModal';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
+
+const PAGE_SIZE = 50;
 
 const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [editing, setEditing] = useState(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   const fetchItems = async () => {
     try {
       setLoading(true);
       setError('');
-      const data = await listShops();
-      setItems(Array.isArray(data) ? data : []);
+      const data = await listShops({ page, limit: PAGE_SIZE, filter });
+      if (data && Array.isArray(data.items)) {
+        setItems(data.items);
+        setTotal(typeof data.total === 'number' ? data.total : 0);
+      } else if (Array.isArray(data)) {
+        // Backward compatibility if server returns array
+        setItems(data);
+        setTotal(data.length);
+      } else {
+        setItems([]);
+        setTotal(0);
+      }
     } catch (e) {
       setError(e?.response?.data?.error || 'Không thể tải danh sách shop');
     } finally {
@@ -28,76 +50,26 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
 
   useEffect(() => {
     fetchItems();
-  }, [refreshKey]);
+  }, [refreshKey, page]);
 
-  const filteredItems = useMemo(() => {
-    if (!Array.isArray(items)) return [];
-    if (filter === 'all') return items;
-    const now = new Date();
-    const dayMs = 1000 * 60 * 60 * 24;
-    const expiringThresholdDays = 30;
-    const parsed = items
-      .map((it) => ({
-        it,
-        exp: it.expired_at ? new Date(it.expired_at) : null,
-      }))
-      .filter(({ it, exp }) => {
-        const isValid = !exp || exp.getTime() - now.getTime() >= 0;
-        if (filter === 'valid') return isValid;
-        if (filter === 'expired') return !isValid;
-        if (filter === 'notOver1y') {
-          // include: valid OR expired within last 365 days
-          if (isValid) return true;
-          // expired
-          if (!exp) return true; // defensive; treat no-expiry as valid
-          const overDays = (now.getTime() - exp.getTime()) / dayMs;
-          return overDays <= 365;
-        }
-        if (filter === 'expiring') {
-          // expiring soon: has expiry within next N days
-          if (!exp) return false; // must have expiry date
-          const days = (exp.getTime() - now.getTime()) / dayMs;
-          return days >= 0 && days <= expiringThresholdDays;
-        }
-        return true;
-      });
+  // Reset to page 1 when filter changes or items refresh
+  useEffect(() => {
+    setPage(1);
+  }, [filter, refreshKey]);
 
-    if (filter === 'valid') {
-      // Sort ascending by date; items without expiry come last
-      parsed.sort((a, b) => {
-        if (!a.exp && !b.exp) return 0;
-        if (!a.exp) return 1;
-        if (!b.exp) return -1;
-        return a.exp.getTime() - b.exp.getTime();
-      });
-    } else if (filter === 'expired') {
-      // Sort descending by date (most recently expired first)
-      parsed.sort((a, b) => {
-        if (!a.exp && !b.exp) return 0;
-        if (!a.exp) return 1;
-        if (!b.exp) return -1;
-        return b.exp.getTime() - a.exp.getTime();
-      });
-    } else if (filter === 'notOver1y') {
-      // Partition: valid first (asc, no-expiry last), then recently expired (desc)
-      const valids = parsed.filter(({ exp }) => !exp || exp.getTime() >= now.getTime());
-      const recents = parsed.filter(({ exp }) => exp && exp.getTime() < now.getTime());
-      valids.sort((a, b) => {
-        if (!a.exp && !b.exp) return 0;
-        if (!a.exp) return 1;
-        if (!b.exp) return -1;
-        return a.exp.getTime() - b.exp.getTime();
-      });
-      recents.sort((a, b) => b.exp.getTime() - a.exp.getTime());
-      return [...valids, ...recents].map(({ it }) => it);
-    } else if (filter === 'expiring') {
-      // Sort ascending by expiry date
-      parsed.sort((a, b) => a.exp.getTime() - b.exp.getTime());
-      return parsed.map(({ it }) => it);
-    }
+  const filteredItems = items; // server provides filtered and sorted data
 
-    return parsed.map(({ it }) => it);
-  }, [items, filter]);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+  const endIndex = Math.min(startIndex + PAGE_SIZE, total);
+
+  const pagedItems = filteredItems; // server already paginates
+
+  const goToPage = (p) => {
+    if (p < 1 || p > totalPages) return;
+    setPage(p);
+  };
 
   const startEdit = (it) => setEditing(it);
   const cancelEdit = () => setEditing(null);
@@ -131,13 +103,44 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
   };
 
   const deleteItem = async (id) => {
-    if (!window.confirm('Bạn có chắc muốn xóa shop này?')) return;
+    if (!window.confirm('Bạn có chắc muốn xóa (mềm) shop này?')) return;
     try {
       await apiDeleteShop(id);
-      setItems((prev) => prev.filter((u) => u.id !== id));
-      toast.success('Đã xóa shop', { richColors: true });
+      // If this was the last item on the page and not the first page, go back a page
+      if (items.length === 1 && page > 1) {
+        setPage((p) => Math.max(1, p - 1));
+      } else {
+        fetchItems();
+      }
+      toast.success('Đã chuyển vào thùng rác', { richColors: true });
     } catch (e) {
       toast.error(e?.response?.data?.error || 'Xóa thất bại', {
+        richColors: true,
+      });
+    }
+  };
+
+  const restoreItem = async (id) => {
+    if (!window.confirm('Khôi phục shop này?')) return;
+    try {
+      await apiRestoreShop(id);
+      fetchItems();
+      toast.success('Đã khôi phục shop', { richColors: true });
+    } catch (e) {
+      toast.error(e?.response?.data?.error || 'Khôi phục thất bại', {
+        richColors: true,
+      });
+    }
+  };
+
+  const forceDeleteItem = async (id) => {
+    if (!window.confirm('Xóa vĩnh viễn? Hành động này không thể hoàn tác.')) return;
+    try {
+      await apiForceDeleteShop(id);
+      fetchItems();
+      toast.success('Đã xóa vĩnh viễn', { richColors: true });
+    } catch (e) {
+      toast.error(e?.response?.data?.error || 'Xóa vĩnh viễn thất bại', {
         richColors: true,
       });
     }
@@ -175,12 +178,12 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
                 <tr>
                   <td colSpan={6}>Đang tải...</td>
                 </tr>
-              ) : items.length === 0 ? (
+              ) : filteredItems.length === 0 ? (
                 <tr>
                   <td colSpan={6}>Không có shop</td>
                 </tr>
               ) : (
-                filteredItems.map((it) => (
+                pagedItems.map((it) => (
                   <tr key={it.id}>
                     <td className="font-mono text-xs">{it.uuid}</td>
                     <td>{it.domain}</td>
@@ -196,30 +199,49 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
                     <td>{computeExpiryInfo(it.expired_at).daysDisplay}</td>
                     <td>
                       <div className="flex gap-2">
-                        <a
-                          className="btn btn-sm btn-outline border border-gray-400"
-                          href={`/shops/${it.id}`}
-                        >
-                          Chi tiết
-                        </a>
-                        <button
-                          className="btn btn-sm btn-primary"
-                          onClick={() => startEdit(it)}
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          className="btn btn-sm btn-outline border border-gray-400"
-                          onClick={() => revokeNow(it.id)}
-                        >
-                          Thu hồi
-                        </button>
-                        <button
-                          className="btn btn-sm btn-outline border border-gray-400"
-                          onClick={() => deleteItem(it.id)}
-                        >
-                          Xóa
-                        </button>
+                        {filter !== 'trashed' ? (
+                          <>
+                            <a
+                              className="btn btn-sm btn-outline border border-gray-400"
+                              href={`/shops/${it.id}`}
+                            >
+                              Chi tiết
+                            </a>
+                            <button
+                              className="btn btn-sm btn-primary"
+                              onClick={() => startEdit(it)}
+                            >
+                              Sửa
+                            </button>
+                            <button
+                              className="btn btn-sm btn-outline border border-gray-400"
+                              onClick={() => revokeNow(it.id)}
+                            >
+                              Thu hồi
+                            </button>
+                            <button
+                              className="btn btn-sm btn-outline border border-gray-400"
+                              onClick={() => deleteItem(it.id)}
+                            >
+                              Xóa
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              className="btn btn-sm btn-primary"
+                              onClick={() => restoreItem(it.id)}
+                            >
+                              Khôi phục
+                            </button>
+                            <button
+                              className="btn btn-sm btn-outline border border-red-500 text-red-600"
+                              onClick={() => forceDeleteItem(it.id)}
+                            >
+                              Xóa vĩnh viễn
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -228,6 +250,92 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Pagination controls */}
+      <div className="mt-4 flex items-center justify-between">
+        <div className="text-sm text-gray-600">
+          {total > 0
+            ? `Hiển thị ${startIndex + 1}–${endIndex} trong ${total} shop`
+            : 'Không có dữ liệu'}
+        </div>
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <button
+                className="btn btn-sm"
+                disabled={currentPage === 1}
+                onClick={() => goToPage(currentPage - 1)}
+              >
+                Trước
+              </button>
+            </PaginationItem>
+
+            {/* Page numbers: compact with ellipsis */}
+            {(() => {
+              const items = [];
+              const maxButtons = 7;
+              if (totalPages <= maxButtons) {
+                for (let i = 1; i <= totalPages; i++) {
+                  items.push(
+                    <PaginationItem key={i}>
+                      <button
+                        className={`btn btn-sm ${
+                          i === currentPage ? 'btn-primary' : 'btn-light'
+                        }`}
+                        onClick={() => goToPage(i)}
+                      >
+                        {i}
+                      </button>
+                    </PaginationItem>
+                  );
+                }
+              } else {
+                const addPageBtn = (i) => (
+                  <PaginationItem key={i}>
+                    <button
+                      className={`btn btn-sm ${
+                        i === currentPage ? 'btn-primary' : 'btn-light'
+                      }`}
+                      onClick={() => goToPage(i)}
+                    >
+                      {i}
+                    </button>
+                  </PaginationItem>
+                );
+                // Always show first
+                items.push(addPageBtn(1));
+                // Left ellipsis
+                if (currentPage > 3) {
+                  items.push(<PaginationEllipsis key="l-ell" />);
+                }
+                // Middle pages
+                const start = Math.max(2, currentPage - 1);
+                const end = Math.min(totalPages - 1, currentPage + 1);
+                for (let i = start; i <= end; i++) {
+                  items.push(addPageBtn(i));
+                }
+                // Right ellipsis
+                if (currentPage < totalPages - 2) {
+                  items.push(<PaginationEllipsis key="r-ell" />);
+                }
+                // Always show last
+                items.push(addPageBtn(totalPages));
+              }
+              return items;
+            })()}
+
+            <PaginationItem>
+              <button
+                className="btn btn-sm"
+                disabled={currentPage === totalPages}
+                onClick={() => goToPage(currentPage + 1)}
+              >
+                Sau
+              </button>
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       </div>
 
       <ShopModal

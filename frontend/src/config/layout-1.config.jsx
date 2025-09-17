@@ -70,6 +70,7 @@ export const MENU_SIDEBAR = [
       { title: 'Sắp hết hạn', path: '/shop-management/expiring', filterKey: 'expiring' },
       { title: 'Còn hạn', path: '/shop-management/valid', filterKey: 'valid' },
       { title: 'Hết hạn', path: '/shop-management/expired', filterKey: 'expired' },
+      { title: 'Thùng rác', path: '/shop-management/trashed', filterKey: 'trashed' },
     ],
   },
   {

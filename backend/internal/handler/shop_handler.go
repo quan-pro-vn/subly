@@ -39,12 +39,49 @@ func (h *ShopHandler) CreateShop(c *gin.Context) {
 
 // ListShops GET /shops
 func (h *ShopHandler) ListShops(c *gin.Context) {
-    items, err := h.svc.List()
+    // Parse pagination parameters: page (>=1), limit (default 50)
+    page := 1
+    limit := 50
+    if v := c.Query("page"); v != "" {
+        if p, err := strconv.Atoi(v); err == nil && p > 0 {
+            page = p
+        }
+    }
+    if v := c.Query("limit"); v != "" {
+        if l, err := strconv.Atoi(v); err == nil && l > 0 {
+            limit = l
+        }
+    }
+    // Optional hard cap to prevent abuse
+    if limit > 200 {
+        limit = 200
+    }
+
+    filter := c.DefaultQuery("filter", "all")
+    items, total, err := h.svc.ListPagedFiltered(page, limit, filter)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }
-    c.JSON(http.StatusOK, items)
+    totalPages := (total + int64(limit) - 1) / int64(limit)
+    c.JSON(http.StatusOK, gin.H{
+        "items":       items,
+        "page":        page,
+        "limit":       limit,
+        "filter":      filter,
+        "total":       total,
+        "total_pages": totalPages,
+    })
+}
+
+// ShopStats GET /shops/stats
+func (h *ShopHandler) ShopStats(c *gin.Context) {
+    stats, err := h.svc.Stats()
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    c.JSON(http.StatusOK, stats)
 }
 
 // GetShop GET /shops/:id
@@ -93,6 +130,34 @@ func (h *ShopHandler) DeleteShop(c *gin.Context) {
         return
     }
     if err := h.svc.Delete(uint(id)); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    c.Status(http.StatusOK)
+}
+
+// ForceDeleteShop DELETE /shops/:id/force
+func (h *ShopHandler) ForceDeleteShop(c *gin.Context) {
+    id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+        return
+    }
+    if err := h.svc.ForceDelete(uint(id)); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    c.Status(http.StatusOK)
+}
+
+// RestoreShop POST /shops/:id/restore
+func (h *ShopHandler) RestoreShop(c *gin.Context) {
+    id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+        return
+    }
+    if err := h.svc.Restore(uint(id)); err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }

@@ -18,6 +18,7 @@ type Shop struct {
     ExpiredAt *time.Time `json:"expired_at"`
     CreatedAt time.Time  `json:"-"`
     UpdatedAt time.Time  `json:"-"`
+    DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 // BeforeCreate hook to ensure UUID is populated

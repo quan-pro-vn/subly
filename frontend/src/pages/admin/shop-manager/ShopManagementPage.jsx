@@ -29,6 +29,7 @@ export const ShopManagementPage = () => {
       if (pathname.endsWith('/valid')) return 'valid';
       if (pathname.endsWith('/expiring')) return 'expiring';
       if (pathname.endsWith('/expired')) return 'expired';
+      if (pathname.endsWith('/trashed')) return 'trashed';
       if (pathname.endsWith('/not-over-1y')) return 'notOver1y';
       if (pathname.endsWith('/shop-management')) return 'notOver1y';
       return 'notOver1y';

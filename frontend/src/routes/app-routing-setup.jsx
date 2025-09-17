@@ -25,6 +25,7 @@ export function AppRoutingSetup() {
             <Route path="/shop-management/valid" element={<ShopManagementPage />} />
             <Route path="/shop-management/expiring" element={<ShopManagementPage />} />
             <Route path="/shop-management/expired" element={<ShopManagementPage />} />
+            <Route path="/shop-management/trashed" element={<ShopManagementPage />} />
             <Route path="/shops/:id" element={<ShopDetailPage />} />
             <Route path="/customer-management" element={<CustomerManagementPage />} />
           </Route>

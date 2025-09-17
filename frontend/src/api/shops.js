@@ -1,7 +1,22 @@
 import http from './index';
 
-export function listShops() {
-  return http.get('/shops').then((r) => r.data);
+export function listShops(params = {}) {
+  const { page = 1, limit = 50, filter = 'all' } = params;
+  return http
+    .get('/shops', { params: { page, limit, filter } })
+    .then((r) => r.data);
+}
+
+export function getShopStats() {
+  return http.get('/shops/stats').then((r) => r.data);
+}
+
+export function restoreShop(id) {
+  return http.post(`/shops/${id}/restore`);
+}
+
+export function forceDeleteShop(id) {
+  return http.delete(`/shops/${id}/force`);
 }
 
 export function getShop(id) {
