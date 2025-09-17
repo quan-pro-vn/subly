@@ -26,7 +26,7 @@ export function AppRoutingSetup() {
             <Route path="/user-management" element={<UserManagementPage />} />
             <Route path="/shop-management">
               <Route index element={<ShopManagementNotOver1yPage />} />
-              <Route path="not-over-1y" element={<ShopManagementNotOver1yPage />} />
+              <Route path="not-over-1m" element={<ShopManagementNotOver1yPage />} />
               <Route path="all" element={<ShopManagementAllPage />} />
               <Route path="valid" element={<ShopManagementValidPage />} />
               <Route path="expiring" element={<ShopManagementExpiringPage />} />

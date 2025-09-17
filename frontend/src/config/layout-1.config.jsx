@@ -65,7 +65,7 @@ export const MENU_SIDEBAR = [
     path: '/shop-management',
     requireRoles: ['admin'],
     children: [
-      { title: 'Không quá 1 tháng', path: '/shop-management/not-over-1y', filterKey: 'notOver1y' },
+      { title: 'Không quá 1 tháng', path: '/shop-management/not-over-1m', filterKey: 'notOver1y' },
       { title: 'Tất cả', path: '/shop-management/all', filterKey: 'all' },
       { title: 'Sắp hết hạn', path: '/shop-management/expiring', filterKey: 'expiring' },
       { title: 'Còn hạn', path: '/shop-management/valid', filterKey: 'valid' },
