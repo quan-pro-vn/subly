@@ -38,10 +38,10 @@ export function SidebarMenu() {
     label:
       'uppercase text-xs font-medium text-muted-foreground/70 pt-2.25 pb-px',
     separator: '',
-    item: 'h-8 hover:bg-transparent text-accent-foreground hover:text-primary data-[selected=true]:text-primary data-[selected=true]:bg-muted data-[selected=true]:font-medium',
+    item: 'h-8 hover:bg-transparent text-accent-foreground hover:text-primary data-[selected=true]:text-primary data-[selected=true]:bg-muted data-[selected=true]:font-semibold',
     sub: '',
     subTrigger:
-      'h-8 hover:bg-transparent text-accent-foreground hover:text-primary data-[selected=true]:text-primary data-[selected=true]:bg-muted data-[selected=true]:font-medium',
+      'h-8 hover:bg-transparent text-accent-foreground hover:text-primary data-[selected=true]:text-primary data-[selected=true]:bg-muted data-[selected=true]:font-semibold',
     subContent: 'py-0',
     indicator: '',
   };
