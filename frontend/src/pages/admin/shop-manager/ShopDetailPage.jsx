@@ -289,7 +289,7 @@ export default function ShopDetailPage() {
                 )}
               </div>
             </div>
-            <div className="card-container">
+            <div className="card-container lg:col-span-2">
               <div className="card-header">
                 <div className="card-title">Lịch sử gọi API</div>
               </div>
