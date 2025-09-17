@@ -10,6 +10,9 @@ import (
 
 // ShopsRouter mounts shop CRUD routes
 func ShopsRouter(r *gin.RouterGroup, h *handler.ShopHandler, tokens domain.TokenRepository, shopCustH *handler.ShopCustomerHandler) {
+    // Public (no-auth) health/check endpoint for shop expiry
+    r.GET("/shops/check", h.CheckStatus)
+
     auth := r.Group("/")
     auth.Use(middleware.Auth(tokens))
 

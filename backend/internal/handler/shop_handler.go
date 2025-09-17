@@ -229,3 +229,49 @@ func (h *ShopHandler) ListRenewals(c *gin.Context) {
     }
     c.JSON(http.StatusOK, items)
 }
+
+// CheckStatus GET /shops/check?shop_uuid=...|domain=...
+// Returns JSON with status and expiry information without auth.
+func (h *ShopHandler) CheckStatus(c *gin.Context) {
+    shopUUID := c.Query("shop_uuid")
+    domain := c.Query("domain")
+    var m *model.Shop
+    var err error
+    if shopUUID == "" && domain == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "shop_uuid or domain required"})
+        return
+    }
+    if shopUUID != "" {
+        m, err = h.svc.FindByUUID(shopUUID)
+    } else {
+        m, err = h.svc.FindByDomain(domain)
+    }
+    if err != nil {
+        // Return a consistent payload for not-found to simplify integrations
+        c.JSON(http.StatusOK, gin.H{"status": "not_found"})
+        return
+    }
+    now := time.Now()
+    var expiredAt *time.Time = m.ExpiredAt
+    unlimited := expiredAt == nil
+    valid := m.Active && (unlimited || !expiredAt.Before(now))
+    var daysRemaining *int
+    if !unlimited {
+        d := int(expiredAt.Sub(now).Hours() / 24)
+        // If still valid and there are remaining hours, count as at least 0 or positive
+        daysRemaining = &d
+    }
+    resp := gin.H{
+        "status":        func() string { if valid { return "valid" } else { return "expired" } }(),
+        "active":        m.Active,
+        "unlimited":     unlimited,
+        "expired_at":    m.ExpiredAt,
+        "now":           now,
+        "shop_uuid":     m.UUID,
+        "domain":        m.Domain,
+    }
+    if daysRemaining != nil {
+        resp["days_remaining"] = *daysRemaining
+    }
+    c.JSON(http.StatusOK, resp)
+}

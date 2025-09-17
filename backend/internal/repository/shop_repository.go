@@ -141,7 +141,8 @@ func (r *ShopRepository) Stats(now time.Time) (ShopStats, error) {
         Count(&out.NotOver1y).Error; err != nil {
         return out, err
     }
-    upper := now.AddDate(0, 0, 30)
+    // reuse upper for expiring window
+    upper = now.AddDate(0, 0, 30)
     if err := r.db.Model(&model.Shop{}).
         Where("expired_at IS NOT NULL AND expired_at >= ? AND expired_at <= ?", now, upper).
         Count(&out.Expiring).Error; err != nil {
@@ -176,6 +177,14 @@ func (r *ShopRepository) FindByID(id uint) (*model.Shop, error) {
 func (r *ShopRepository) FindByDomain(domain string) (*model.Shop, error) {
     var s model.Shop
     if err := r.db.Where("domain = ?", domain).First(&s).Error; err != nil {
+        return nil, err
+    }
+    return &s, nil
+}
+
+func (r *ShopRepository) FindByUUID(uuid string) (*model.Shop, error) {
+    var s model.Shop
+    if err := r.db.Where("uuid = ?", uuid).First(&s).Error; err != nil {
         return nil, err
     }
     return &s, nil

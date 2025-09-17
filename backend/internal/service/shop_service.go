@@ -95,6 +95,14 @@ func (s *ShopService) Get(id uint) (*model.Shop, error) {
     return s.shops.FindByID(id)
 }
 
+func (s *ShopService) FindByUUID(uuid string) (*model.Shop, error) {
+    return s.shops.FindByUUID(uuid)
+}
+
+func (s *ShopService) FindByDomain(domain string) (*model.Shop, error) {
+    return s.shops.FindByDomain(domain)
+}
+
 func (s *ShopService) Update(id uint, domain string, expiredAt *time.Time) (*model.Shop, error) {
     m, err := s.shops.FindByID(id)
     if err != nil {
