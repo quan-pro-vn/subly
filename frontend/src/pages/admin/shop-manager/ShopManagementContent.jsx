@@ -50,7 +50,7 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
 
   useEffect(() => {
     fetchItems();
-  }, [refreshKey, page]);
+  }, [refreshKey, page, filter]);
 
   // Reset to page 1 when filter changes or items refresh
   useEffect(() => {
