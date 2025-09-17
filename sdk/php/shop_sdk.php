@@ -155,3 +155,93 @@ if (!function_exists('shop_is_valid')) {
         return $c->isValid($domain, $uuid);
     }
 }
+
+// === Laravel-friendly helpers ===
+if (!function_exists('shop_check_auto')) {
+    /**
+     * Auto-detect shop_uuid from env first, otherwise use current request host as domain.
+     * Works in Laravel and plain PHP.
+     *
+     * @param string $baseUrl
+     * @param array $options
+     * @return array
+     */
+    function shop_check_auto(string $baseUrl = SUBLY_BASE_URL, array $options = []): array
+    {
+        $uuid = _shop_env('SUBLY_SHOP_UUID') ?? _shop_env('SHOP_UUID');
+        $domain = null;
+        if (!$uuid) {
+            $domain = _shop_current_host();
+        }
+        return shop_check_status($baseUrl, $domain, $uuid, $options);
+    }
+}
+
+if (!function_exists('shop_is_valid_auto')) {
+    function shop_is_valid_auto(string $baseUrl = SUBLY_BASE_URL, array $options = []): bool
+    {
+        $res = shop_check_auto($baseUrl, $options);
+        return isset($res['status']) && $res['status'] === 'valid';
+    }
+}
+
+// Internal: read env variable (Laravel env() aware)
+if (!function_exists('_shop_env')) {
+    function _shop_env(string $key): ?string
+    {
+        // Laravel env()
+        if (function_exists('env')) {
+            $val = env($key);
+            if ($val !== null && $val !== false && $val !== '') return (string)$val;
+        }
+        // PHP getenv / $_ENV / $_SERVER
+        $val = getenv($key);
+        if ($val !== false && $val !== '') return (string)$val;
+        if (isset($_ENV[$key]) && $_ENV[$key] !== '') return (string)$_ENV[$key];
+        if (isset($_SERVER[$key]) && $_SERVER[$key] !== '') return (string)$_SERVER[$key];
+        return null;
+    }
+}
+
+// Internal: detect current host (Laravel Request aware)
+if (!function_exists('_shop_current_host')) {
+    function _shop_current_host(): ?string
+    {
+        // Laravel request() helper if available
+        if (function_exists('request')) {
+            try {
+                $req = request();
+                if ($req && method_exists($req, 'getHost')) {
+                    $host = $req->getHost();
+                    if ($host) return _shop_sanitize_host($host);
+                }
+            } catch (\Throwable $e) {
+                // ignore
+            }
+        }
+        // Fallback to server vars
+        $candidates = [
+            $_SERVER['HTTP_HOST'] ?? null,
+            $_SERVER['SERVER_NAME'] ?? null,
+        ];
+        foreach ($candidates as $h) {
+            if ($h) return _shop_sanitize_host($h);
+        }
+        return null;
+    }
+}
+
+if (!function_exists('_shop_sanitize_host')) {
+    function _shop_sanitize_host(string $host): string
+    {
+        // strip port and spaces
+        $h = trim($host);
+        // remove protocol if accidentally included
+        $h = preg_replace('#^https?://#i', '', $h);
+        // take until first slash
+        $h = explode('/', $h, 2)[0];
+        // drop port
+        $h = explode(':', $h, 2)[0];
+        return $h;
+    }
+}
