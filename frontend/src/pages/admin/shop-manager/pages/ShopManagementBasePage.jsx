@@ -16,6 +16,7 @@ import ShopModal from '../ShopModal';
 export default function ShopManagementBasePage({ filter = 'notOver1y', title = 'Quản lý Shop' }) {
   const [creating, setCreating] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [mounted, setMounted] = useState(false);
 
   // Force refetch whenever filter (page) changes
   useEffect(() => {
@@ -23,6 +24,15 @@ export default function ShopManagementBasePage({ filter = 'notOver1y', title = '
     // Optionally scroll to top on page switch
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' });
   }, [filter]);
+
+  // Simple fade/slide-in on mount
+  useEffect(() => {
+    let raf = requestAnimationFrame(() => setMounted(true));
+    return () => {
+      cancelAnimationFrame(raf);
+      setMounted(false);
+    };
+  }, []);
 
   const openCreate = () => setCreating(true);
   const closeCreate = () => setCreating(false);
@@ -45,23 +55,33 @@ export default function ShopManagementBasePage({ filter = 'notOver1y', title = '
     <Fragment>
       <PageTitle title={title} />
       <Container>
-        <Toolbar>
-          <ToolbarHeading>
-            <ToolbarPageTitle />
-            <ToolbarDescription>
-              <div className="flex items-center flex-wrap gap-1.5 font-medium" />
-            </ToolbarDescription>
-          </ToolbarHeading>
-          <ToolbarActions>
-            <button type="button" onClick={openCreate} className="btn btn-sm btn-primary">
-              Tạo shop
-            </button>
-          </ToolbarActions>
-        </Toolbar>
+        <div
+          className={`transition-all duration-300 ease-out ${
+            mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+          }`}
+        >
+          <Toolbar>
+            <ToolbarHeading>
+              <ToolbarPageTitle />
+              <ToolbarDescription>
+                <div className="flex items-center flex-wrap gap-1.5 font-medium" />
+              </ToolbarDescription>
+            </ToolbarHeading>
+            <ToolbarActions>
+              <button type="button" onClick={openCreate} className="btn btn-sm btn-primary">
+                Tạo shop
+              </button>
+            </ToolbarActions>
+          </Toolbar>
+        </div>
       </Container>
 
       <Container>
-        <div className="mt-0">
+        <div
+          className={`mt-0 transition-all duration-300 ease-out ${
+            mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+          }`}
+        >
           <ShopManagementContent refreshKey={refreshKey} filter={filter} />
         </div>
       </Container>
