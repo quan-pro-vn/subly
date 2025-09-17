@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { createShop } from '@/api/shops';
 import { toast } from 'sonner';
 import { Container } from '@/components/common/container';
@@ -16,6 +16,13 @@ import ShopModal from '../ShopModal';
 export default function ShopManagementBasePage({ filter = 'notOver1y', title = 'Quản lý Shop' }) {
   const [creating, setCreating] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Force refetch whenever filter (page) changes
+  useEffect(() => {
+    setRefreshKey((k) => k + 1);
+    // Optionally scroll to top on page switch
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [filter]);
 
   const openCreate = () => setCreating(true);
   const closeCreate = () => setCreating(false);
