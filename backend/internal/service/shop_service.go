@@ -116,8 +116,8 @@ func (s *ShopService) Update(id uint, domain string, expiredAt *time.Time) (*mod
         }
         m.Domain = domain
     }
-    if expiredAt != nil || (expiredAt == nil && m.ExpiredAt != nil) {
-        // allow setting to null by sending null
+    // Do not modify ExpiredAt unless explicitly provided (nil means keep current)
+    if expiredAt != nil {
         m.ExpiredAt = expiredAt
     }
     // price/cycle are updated via specialized method to keep signature minimal

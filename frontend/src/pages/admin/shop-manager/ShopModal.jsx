@@ -60,16 +60,6 @@ export default function ShopModal({
     if (mode !== 'edit' || !original) return values;
     const payload = {};
     if (values.domain !== original.domain) payload.domain = values.domain;
-    // Map expired_at from YYYY-MM-DD (UI) to ISO string (UTC midnight)
-    const origDate = original.expired_at
-      ? new Date(original.expired_at)
-      : null;
-    const uiChanged = values.expired_at !== (origDate ? formatDate(origDate) : '');
-    if (uiChanged) {
-      payload.expired_at = values.expired_at
-        ? new Date(values.expired_at + 'T00:00:00Z').toISOString()
-        : null;
-    }
     if (values.price_per_cycle && values.price_per_cycle !== original.price_per_cycle) {
       payload.price_per_cycle = values.price_per_cycle;
     }
@@ -93,6 +83,7 @@ export default function ShopModal({
       payload = changedPayload;
     } else {
       payload = { domain: values.domain };
+      // Only allow setting expired_at on create
       payload.expired_at = values.expired_at
         ? new Date(values.expired_at + 'T00:00:00Z').toISOString()
         : null;
@@ -127,20 +118,22 @@ export default function ShopModal({
             )}
           </div>
 
-          <div>
-            <label className="block text-sm mb-1">Ngày hết hạn</label>
-            <input
-              type="date"
-              className="input input-bordered w-full"
-              value={values.expired_at || ''}
-              onChange={(e) => setValue('expired_at', e.target.value)}
-            />
-            {errors.expired_at && (
-              <p className="mt-1 text-xs text-red-600">
-                {errors.expired_at.message}
-              </p>
-            )}
-          </div>
+          {mode === 'create' && (
+            <div>
+              <label className="block text-sm mb-1">Ngày hết hạn</label>
+              <input
+                type="date"
+                className="input input-bordered w-full"
+                value={values.expired_at || ''}
+                onChange={(e) => setValue('expired_at', e.target.value)}
+              />
+              {errors.expired_at && (
+                <p className="mt-1 text-xs text-red-600">
+                  {errors.expired_at.message}
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div>

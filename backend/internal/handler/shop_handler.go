@@ -25,17 +25,17 @@ func (h *ShopHandler) CreateShop(c *gin.Context) {
     var req struct {
         Domain    string     `json:"domain" binding:"required"`
         ExpiredAt *time.Time `json:"expired_at"`
-        PricePerCycle *int   `json:"price_per_cycle"`
-        CycleMonths   *int   `json:"cycle_months"`
+        PricePerCycle *IntOrString `json:"price_per_cycle"`
+        CycleMonths   *IntOrString `json:"cycle_months"`
     }
     if err := c.ShouldBindJSON(&req); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
     price := 0
-    if req.PricePerCycle != nil { price = *req.PricePerCycle }
+    if req.PricePerCycle != nil { price = int(*req.PricePerCycle) }
     cycle := 0
-    if req.CycleMonths != nil { cycle = *req.CycleMonths }
+    if req.CycleMonths != nil { cycle = int(*req.CycleMonths) }
     m, err := h.svc.Create(req.Domain, req.ExpiredAt, price, cycle)
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -115,21 +115,26 @@ func (h *ShopHandler) UpdateShop(c *gin.Context) {
     }
     var req struct {
         Domain    string     `json:"domain"`
-        ExpiredAt *time.Time `json:"expired_at"`
-        PricePerCycle *int   `json:"price_per_cycle"`
-        CycleMonths   *int   `json:"cycle_months"`
+        // NOTE: expired_at is ignored on update; use renew endpoints instead
+        PricePerCycle *IntOrString `json:"price_per_cycle"`
+        CycleMonths   *IntOrString `json:"cycle_months"`
     }
     if err := c.ShouldBindJSON(&req); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
-    m, err := h.svc.Update(uint(id), req.Domain, req.ExpiredAt)
+    // Do not allow updating expired_at via Update; pass nil to keep existing
+    m, err := h.svc.Update(uint(id), req.Domain, nil)
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
     if req.PricePerCycle != nil || req.CycleMonths != nil {
-        m, err = h.svc.UpdateBilling(uint(id), req.PricePerCycle, req.CycleMonths)
+        var pp *int
+        var cm *int
+        if req.PricePerCycle != nil { v := int(*req.PricePerCycle); pp = &v }
+        if req.CycleMonths != nil { v := int(*req.CycleMonths); cm = &v }
+        m, err = h.svc.UpdateBilling(uint(id), pp, cm)
         if err != nil {
             c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
             return
@@ -188,7 +193,7 @@ func (h *ShopHandler) RenewShop(c *gin.Context) {
         return
     }
     var req struct {
-        Months int      `json:"months"`
+        Months *IntOrString `json:"months"`
         Note   *string  `json:"note"`
         NextExpiredAt *time.Time `json:"next_expired_at"`
     }
@@ -202,8 +207,8 @@ func (h *ShopHandler) RenewShop(c *gin.Context) {
     var rec *model.ShopRenewal
     if req.NextExpiredAt != nil {
         shop, rec, err = h.svc.RenewToDate(uint(id64), *req.NextExpiredAt, performedBy, req.Note)
-    } else if req.Months > 0 {
-        shop, rec, err = h.svc.Renew(uint(id64), req.Months, performedBy, req.Note)
+    } else if req.Months != nil && int(*req.Months) > 0 {
+        shop, rec, err = h.svc.Renew(uint(id64), int(*req.Months), performedBy, req.Note)
     } else {
         c.JSON(http.StatusBadRequest, gin.H{"error": "months or next_expired_at required"})
         return
