@@ -194,6 +194,11 @@ if (!function_exists('_shop_env')) {
             $val = env($key);
             if ($val !== null && $val !== false && $val !== '') return (string)$val;
         }
+        // WordPress / plain PHP: defined constant in wp-config.php or elsewhere
+        if (defined($key)) {
+            $val = constant($key);
+            if ($val !== null && $val !== '') return (string)$val;
+        }
         // PHP getenv / $_ENV / $_SERVER
         $val = getenv($key);
         if ($val !== false && $val !== '') return (string)$val;
@@ -215,6 +220,16 @@ if (!function_exists('_shop_current_host')) {
                     $host = $req->getHost();
                     if ($host) return _shop_sanitize_host($host);
                 }
+            } catch (\Throwable $e) {
+                // ignore
+            }
+        }
+        // WordPress: derive from home_url if available
+        if (function_exists('home_url')) {
+            try {
+                $u = home_url('/');
+                $h = parse_url($u, PHP_URL_HOST);
+                if (!empty($h)) return _shop_sanitize_host($h);
             } catch (\Throwable $e) {
                 // ignore
             }
