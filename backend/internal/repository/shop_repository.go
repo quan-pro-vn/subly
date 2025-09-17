@@ -66,8 +66,10 @@ func (r *ShopRepository) ListPagedFiltered(page, limit int, filter string, now t
     case "expired":
         q = q.Where("expired_at IS NOT NULL AND expired_at < ?", now)
     case "notOver1y":
-        cutoff := now.AddDate(0, 0, -365)
-        q = q.Where("expired_at IS NULL OR expired_at >= ?", cutoff)
+        // Interpret as within ±30 days around now
+        lower := now.AddDate(0, 0, -30)
+        upper := now.AddDate(0, 0, 30)
+        q = q.Where("expired_at IS NOT NULL AND expired_at >= ? AND expired_at <= ?", lower, upper)
     case "expiring":
         upper := now.AddDate(0, 0, 30)
         q = q.Where("expired_at IS NOT NULL AND expired_at >= ? AND expired_at <= ?", now, upper)
@@ -92,6 +94,8 @@ func (r *ShopRepository) ListPagedFiltered(page, limit int, filter string, now t
         q = q.Order("expired_at ASC")
     case "trashed":
         q = q.Order("deleted_at DESC")
+    case "notOver1y":
+        q = q.Order("expired_at ASC")
     default:
         q = q.Order("id DESC")
     }
@@ -129,9 +133,11 @@ func (r *ShopRepository) Stats(now time.Time) (ShopStats, error) {
         Count(&out.Expired).Error; err != nil {
         return out, err
     }
-    cutoff := now.AddDate(0, 0, -365)
+    // NotOver1y now means within ±30 days around now
+    lower := now.AddDate(0, 0, -30)
+    upper := now.AddDate(0, 0, 30)
     if err := r.db.Model(&model.Shop{}).
-        Where("expired_at IS NULL OR expired_at >= ?", cutoff).
+        Where("expired_at IS NOT NULL AND expired_at >= ? AND expired_at <= ?", lower, upper).
         Count(&out.NotOver1y).Error; err != nil {
         return out, err
     }
