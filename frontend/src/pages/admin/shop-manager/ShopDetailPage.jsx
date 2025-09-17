@@ -9,7 +9,7 @@ import {
   ToolbarHeading,
   ToolbarPageTitle,
 } from '@/components/layouts/layout-1/components/toolbar';
-import { getShop, listShopRenewals, renewShop } from '@/api/shops';
+import { getShop, listShopRenewals, renewShop, listShopApiLogs } from '@/api/shops';
 import ShopCustomersSection from './ShopCustomersSection';
 
 export default function ShopDetailPage() {
@@ -73,6 +73,7 @@ export default function ShopDetailPage() {
     };
   }, [shop, months, nextDate]);
   const [renewals, setRenewals] = useState([]);
+  const [apiLogs, setApiLogs] = useState([]);
   const [renewing, setRenewing] = useState(false);
 
   const fetchShop = async () => {
@@ -97,9 +98,21 @@ export default function ShopDetailPage() {
     }
   };
 
+  const fetchApiLogs = async () => {
+    try {
+      const data = await listShopApiLogs(id, { page: 1, limit: 50 });
+      if (data && Array.isArray(data.items)) setApiLogs(data.items);
+      else if (Array.isArray(data)) setApiLogs(data);
+      else setApiLogs([]);
+    } catch (e) {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     fetchShop();
     fetchRenewals();
+    fetchApiLogs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -268,6 +281,43 @@ export default function ShopDetailPage() {
                             <td>{r.months}</td>
                             <td>{r.old_expired_at ? formatDate(new Date(r.old_expired_at)) : '-'}</td>
                             <td>{formatDate(new Date(r.new_expired_at))}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="card-container">
+              <div className="card-header">
+                <div className="card-title">Lịch sử gọi API</div>
+              </div>
+              <div className="card-content">
+                {apiLogs.length === 0 ? (
+                  <div className="text-sm text-muted-foreground">Chưa có</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="table table-sm">
+                      <thead>
+                        <tr>
+                          <th>Thời gian</th>
+                          <th>Trạng thái</th>
+                          <th>Client IP</th>
+                          <th>Domain param</th>
+                          <th>UUID param</th>
+                          <th>User Agent</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {apiLogs.map((r) => (
+                          <tr key={r.id}>
+                            <td>{formatDateTime(r.created_at)}</td>
+                            <td>{r.status}</td>
+                            <td>{r.client_ip}</td>
+                            <td>{r.domain_param || '-'}</td>
+                            <td>{r.uuid_param || '-'}</td>
+                            <td className="max-w-[360px] truncate" title={r.user_agent}>{r.user_agent}</td>
                           </tr>
                         ))}
                       </tbody>

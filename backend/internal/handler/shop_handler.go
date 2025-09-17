@@ -9,15 +9,22 @@ import (
 
     "metronic/internal/service"
     "metronic/internal/model"
+    "metronic/internal/repository"
 )
 
 // ShopHandler handles HTTP requests for shops
 type ShopHandler struct {
     svc *service.ShopService
+    apiLogs *repository.ShopAPILogRepository
 }
 
 func NewShopHandler(s *service.ShopService) *ShopHandler {
     return &ShopHandler{svc: s}
+}
+
+func (h *ShopHandler) WithAPILogRepo(r *repository.ShopAPILogRepository) *ShopHandler {
+    h.apiLogs = r
+    return h
 }
 
 // CreateShop POST /shops
@@ -279,4 +286,44 @@ func (h *ShopHandler) CheckStatus(c *gin.Context) {
         resp["days_remaining"] = *daysRemaining
     }
     c.JSON(http.StatusOK, resp)
+
+    // log call (best-effort)
+    if h.apiLogs != nil && m != nil {
+        go func() {
+            domainPtr := func() *string { if domain == "" { return nil }; v:=domain; return &v }()
+            uuidPtr := func() *string { if shopUUID == "" { return nil }; v:=shopUUID; return &v }()
+            _ = h.apiLogs.Create(&model.ShopAPILog{
+                ShopID:      m.ID,
+                ShopUUID:    m.UUID,
+                DomainParam: domainPtr,
+                UUIDParam:   uuidPtr,
+                ClientIP:    c.ClientIP(),
+                UserAgent:   c.GetHeader("User-Agent"),
+                Status:      resp["status"].(string),
+            })
+        }()
+    }
+}
+
+// ListAPILogs GET /shops/:id/api-logs
+func (h *ShopHandler) ListAPILogs(c *gin.Context) {
+    id64, err := strconv.ParseUint(c.Param("id"), 10, 64)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+        return
+    }
+    page := 1
+    limit := 50
+    if v := c.Query("page"); v != "" {
+        if p, err := strconv.Atoi(v); err == nil && p > 0 { page = p }
+    }
+    if v := c.Query("limit"); v != "" {
+        if l, err := strconv.Atoi(v); err == nil && l > 0 { limit = l }
+    }
+    items, total, err := h.apiLogs.ListByShopIDPaged(uint(id64), page, limit)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{ "items": items, "page": page, "limit": limit, "total": total })
 }

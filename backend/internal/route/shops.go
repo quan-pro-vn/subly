@@ -27,6 +27,7 @@ func ShopsRouter(r *gin.RouterGroup, h *handler.ShopHandler, tokens domain.Token
     // renewals
     auth.POST("/shops/:id/renew", h.RenewShop)
     auth.GET("/shops/:id/renewals", h.ListRenewals)
+    auth.GET("/shops/:id/api-logs", h.ListAPILogs)
 
     if shopCustH != nil {
         auth.POST("/shops/:id/customers", shopCustH.Assign)

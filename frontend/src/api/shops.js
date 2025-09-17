@@ -53,3 +53,8 @@ export function renewShop(id, payload) {
 export function listShopRenewals(id) {
   return http.get(`/shops/${id}/renewals`).then((r) => r.data);
 }
+
+export function listShopApiLogs(id, params = {}) {
+  const { page = 1, limit = 50 } = params;
+  return http.get(`/shops/${id}/api-logs`, { params: { page, limit } }).then((r) => r.data);
+}

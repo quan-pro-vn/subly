@@ -1,0 +1,44 @@
+package repository
+
+import (
+    "metronic/internal/model"
+
+    "gorm.io/gorm"
+)
+
+type ShopAPILogRepository struct {
+    db *gorm.DB
+}
+
+func NewShopAPILogRepository(db *gorm.DB) *ShopAPILogRepository {
+    return &ShopAPILogRepository{db: db}
+}
+
+func (r *ShopAPILogRepository) Create(rec *model.ShopAPILog) error {
+    return r.db.Create(rec).Error
+}
+
+func (r *ShopAPILogRepository) ListByShopID(shopID uint, limit int) ([]model.ShopAPILog, error) {
+    if limit <= 0 || limit > 200 {
+        limit = 50
+    }
+    var items []model.ShopAPILog
+    if err := r.db.Where("shop_id = ?", shopID).Order("id DESC").Limit(limit).Find(&items).Error; err != nil {
+        return nil, err
+    }
+    return items, nil
+}
+
+func (r *ShopAPILogRepository) ListByShopIDPaged(shopID uint, page, limit int) ([]model.ShopAPILog, int64, error) {
+    if page < 1 { page = 1 }
+    if limit <= 0 || limit > 200 { limit = 50 }
+    q := r.db.Model(&model.ShopAPILog{}).Where("shop_id = ?", shopID)
+    var total int64
+    if err := q.Count(&total).Error; err != nil { return nil, 0, err }
+    var items []model.ShopAPILog
+    if err := q.Order("id DESC").Limit(limit).Offset((page-1)*limit).Find(&items).Error; err != nil {
+        return nil, 0, err
+    }
+    return items, total, nil
+}
+

@@ -37,6 +37,7 @@ func Connect(dsn string) (*gorm.DB, error) {
         &model.Permission{},
         &model.Shop{},
         &model.ShopRenewal{},
+        &model.ShopAPILog{},
         &model.CustomerShop{},
         &domain.Token{},
     ); err != nil {

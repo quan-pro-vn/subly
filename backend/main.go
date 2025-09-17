@@ -41,7 +41,8 @@ func main() {
     userService := service.NewUserService(userRepo)
     userHandler := handler.NewUserHandler(userService)
     shopService := service.NewShopService(shopRepo).WithRenewalRepo(shopRenewalRepo)
-    shopHandler := handler.NewShopHandler(shopService)
+    shopAPILogRepo := repository.NewShopAPILogRepository(db)
+    shopHandler := handler.NewShopHandler(shopService).WithAPILogRepo(shopAPILogRepo)
     // Shop-Customer membership wiring
     custShopRepo := repository.NewCustomerShopRepository(db)
     shopCustSvc := service.NewShopCustomerService(custShopRepo)
