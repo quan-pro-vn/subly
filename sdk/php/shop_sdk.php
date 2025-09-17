@@ -12,6 +12,11 @@
  *   GET {BASE}/api/shops/check?domain=... | shop_uuid=...
  */
 
+// Default production base URL
+if (!defined('SUBLY_BASE_URL')) {
+    define('SUBLY_BASE_URL', 'https://subly.quan.pro.vn');
+}
+
 class ShopExpiryClient
 {
     private string $baseUrl;
@@ -24,7 +29,7 @@ class ShopExpiryClient
      * @param string $baseUrl Backend base URL (e.g., https://api.example.com)
      * @param array $options  ['timeout'=>8, 'connect_timeout'=>5, 'verify_ssl'=>true, 'user_agent'=>string]
      */
-    public function __construct(string $baseUrl, array $options = [])
+    public function __construct(string $baseUrl = SUBLY_BASE_URL, array $options = [])
     {
         $this->baseUrl = rtrim($baseUrl, '/');
         $this->timeout = isset($options['timeout']) ? (int)$options['timeout'] : 8;
@@ -136,7 +141,7 @@ if (!function_exists('shop_check_status')) {
      * @param string|null $uuid
      * @param array $options same as ShopExpiryClient ctor options
      */
-    function shop_check_status(string $baseUrl, ?string $domain = null, ?string $uuid = null, array $options = []): array
+    function shop_check_status(string $baseUrl = SUBLY_BASE_URL, ?string $domain = null, ?string $uuid = null, array $options = []): array
     {
         $c = new ShopExpiryClient($baseUrl, $options);
         return $c->check($domain, $uuid);
@@ -144,10 +149,9 @@ if (!function_exists('shop_check_status')) {
 }
 
 if (!function_exists('shop_is_valid')) {
-    function shop_is_valid(string $baseUrl, ?string $domain = null, ?string $uuid = null, array $options = []): bool
+    function shop_is_valid(string $baseUrl = SUBLY_BASE_URL, ?string $domain = null, ?string $uuid = null, array $options = []): bool
     {
         $c = new ShopExpiryClient($baseUrl, $options);
         return $c->isValid($domain, $uuid);
     }
 }
-
