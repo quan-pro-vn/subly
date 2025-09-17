@@ -13,7 +13,7 @@ import {
 import { ShopManagementContent } from '../ShopManagementContent';
 import ShopModal from '../ShopModal';
 
-export default function ShopManagementBasePage({ filter = 'notOver1y', title = 'Shop Management' }) {
+export default function ShopManagementBasePage({ filter = 'notOver1y', title = 'Quản lý Shop' }) {
   const [creating, setCreating] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -69,4 +69,3 @@ export default function ShopManagementBasePage({ filter = 'notOver1y', title = '
     </Fragment>
   );
 }
-
