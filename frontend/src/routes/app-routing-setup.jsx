@@ -5,7 +5,12 @@ import { Layout1 } from '@/components/layouts/layout-1';
 import { AuthRouting } from '../auth/auth-routing';
 import { RequireRole } from '@/auth/require-role';
 import { UserManagementPage } from '../pages/admin/user-manager/UserManagementPage';
-import { ShopManagementPage } from '../pages/admin/shop-manager/ShopManagementPage';
+import ShopManagementNotOver1yPage from '../pages/admin/shop-manager/pages/ShopManagementNotOver1yPage';
+import ShopManagementAllPage from '../pages/admin/shop-manager/pages/ShopManagementAllPage';
+import ShopManagementValidPage from '../pages/admin/shop-manager/pages/ShopManagementValidPage';
+import ShopManagementExpiringPage from '../pages/admin/shop-manager/pages/ShopManagementExpiringPage';
+import ShopManagementExpiredPage from '../pages/admin/shop-manager/pages/ShopManagementExpiredPage';
+import ShopTrashPage from '../pages/admin/shop-manager/pages/ShopTrashPage';
 import { CustomerManagementPage } from '../pages/admin/customer-manager/CustomerManagementPage';
 import ShopDetailPage from '../pages/admin/shop-manager/ShopDetailPage';
 
@@ -20,8 +25,13 @@ export function AppRoutingSetup() {
           <Route element={<RequireRole roles={["admin"]} />}>
             <Route path="/user-management" element={<UserManagementPage />} />
             <Route path="/shop-management">
-              <Route index element={<ShopManagementPage />} />
-              <Route path=":filterKey" element={<ShopManagementPage />} />
+              <Route index element={<ShopManagementNotOver1yPage />} />
+              <Route path="not-over-1y" element={<ShopManagementNotOver1yPage />} />
+              <Route path="all" element={<ShopManagementAllPage />} />
+              <Route path="valid" element={<ShopManagementValidPage />} />
+              <Route path="expiring" element={<ShopManagementExpiringPage />} />
+              <Route path="expired" element={<ShopManagementExpiredPage />} />
+              <Route path="trashed" element={<ShopTrashPage />} />
             </Route>
             <Route path="/shops/:id" element={<ShopDetailPage />} />
             <Route path="/customer-management" element={<CustomerManagementPage />} />
