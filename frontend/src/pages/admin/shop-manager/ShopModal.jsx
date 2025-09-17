@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -104,7 +105,7 @@ export default function ShopModal({
 
   if (!isOpen) return null;
 
-  return (
+  const modal = (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-md shadow-lg p-4 w-[520px] max-w-[92vw]">
         <h3 className="text-lg font-semibold mb-3">
@@ -193,6 +194,8 @@ export default function ShopModal({
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 }
 
 // Helper to format Date -> YYYY-MM-DD
