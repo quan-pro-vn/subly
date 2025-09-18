@@ -13,6 +13,7 @@ export default function IntegrationPage() {
   const [pluginContent, setPluginContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
+  const [zipAvailable, setZipAvailable] = useState(false);
   useEffect(() => {
     let ignore = false;
     (async () => {
@@ -20,6 +21,13 @@ export default function IntegrationPage() {
         const res = await fetch('/plugins/shop-check.php');
         const txt = await res.text();
         if (!ignore) setPluginContent(txt);
+        // Probe zip availability
+        try {
+          const head = await fetch('/plugins/shop-check.zip', { method: 'HEAD' });
+          if (!ignore) setZipAvailable(head.ok);
+        } catch (_) {
+          if (!ignore) setZipAvailable(false);
+        }
       } catch (e) {
         if (!ignore) setErr('Không thể tải nội dung plugin');
       } finally {
@@ -42,6 +50,16 @@ export default function IntegrationPage() {
   };
 
   const downloadZip = () => {
+    if (zipAvailable) {
+      const a = document.createElement('a');
+      a.href = '/plugins/shop-check.zip';
+      a.download = 'shop-check.zip';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      return;
+    }
+    // Fallback: generate zip on the fly from current content
     const blob = makeZipBlob('shop-check.php', pluginContent);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -73,7 +91,7 @@ export default function IntegrationPage() {
               Tải plugin (shop-check.php)
             </button>
             <button type="button" className="btn btn-sm btn-light" onClick={downloadZip}>
-              Tải plugin (.zip)
+              Tải plugin (.zip){zipAvailable ? '' : ' (tạo nhanh)'}
             </button>
           </ToolbarActions>
         </Toolbar>
