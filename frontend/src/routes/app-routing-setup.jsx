@@ -14,6 +14,7 @@ import ShopTrashPage from '../pages/admin/shop-manager/pages/ShopTrashPage';
 import { CustomerManagementPage } from '../pages/admin/customer-manager/CustomerManagementPage';
 import ShopDetailPage from '../pages/admin/shop-manager/ShopDetailPage';
 import ApiHistoryPage from '../pages/admin/api-history/ApiHistoryPage';
+import IntegrationPage from '../pages/admin/integration/IntegrationPage';
 
 export function AppRoutingSetup() {
   return (
@@ -36,7 +37,8 @@ export function AppRoutingSetup() {
             </Route>
             <Route path="/shops/:id" element={<ShopDetailPage />} />
             <Route path="/customer-management" element={<CustomerManagementPage />} />
-            <Route path="/call-history-api" element={<ApiHistoryPage />} />
+            <Route path="/api-call-history" element={<ApiHistoryPage />} />
+            <Route path="/integration" element={<IntegrationPage />} />
           </Route>
         </Route>
       </Route>

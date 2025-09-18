@@ -80,6 +80,12 @@ export const MENU_SIDEBAR = [
     requireRoles: ['admin'],
   },
   {
+    title: 'Tích hợp',
+    icon: Plug,
+    path: '/integration',
+    requireRoles: ['admin'],
+  },
+  {
     title: 'Lịch sử gọi API',
     icon: FileText,
     path: '/call-history-api',
