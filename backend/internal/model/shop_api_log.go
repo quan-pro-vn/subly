@@ -7,6 +7,7 @@ type ShopAPILog struct {
     ID           uint      `gorm:"primaryKey" json:"id"`
     ShopID       uint      `gorm:"index" json:"shop_id"`
     ShopUUID     string    `gorm:"size:36;index" json:"shop_uuid"`
+    ShopDomain   *string   `gorm:"-" json:"shop_domain,omitempty"`
     DomainParam  *string   `gorm:"size:255" json:"domain_param,omitempty"`
     UUIDParam    *string   `gorm:"size:255" json:"uuid_param,omitempty"`
     ClientIP     string    `gorm:"size:64" json:"client_ip"`
@@ -16,4 +17,3 @@ type ShopAPILog struct {
 }
 
 func (ShopAPILog) TableName() string { return "shop_api_logs" }
-

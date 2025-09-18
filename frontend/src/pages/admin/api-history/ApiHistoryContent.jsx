@@ -106,8 +106,7 @@ export default function ApiHistoryContent() {
           <thead>
             <tr>
               <th className="text-start px-4 py-3">ID</th>
-              <th className="text-start px-4 py-3">Shop ID</th>
-              <th className="text-start px-4 py-3">Shop UUID</th>
+              <th className="text-start px-4 py-3">Shop</th>
               <th className="text-start px-4 py-3">Domain param</th>
               <th className="text-start px-4 py-3">UUID param</th>
               <th className="text-start px-4 py-3">Status</th>
@@ -120,21 +119,24 @@ export default function ApiHistoryContent() {
             {loading ? (
               Array.from({ length: 8 }).map((_, i) => (
                 <tr key={`sk-${i}`}>
-                  {Array.from({ length: 9 }).map((__, j) => (
+                  {Array.from({ length: 8 }).map((__, j) => (
                     <td key={j} className="px-4 py-2"><Skeleton className="h-4 w-full" /></td>
                   ))}
                 </tr>
               ))
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-6 text-center text-sm text-muted-foreground">Không có dữ liệu</td>
+                <td colSpan={8} className="px-4 py-6 text-center text-sm text-muted-foreground">Không có dữ liệu</td>
               </tr>
             ) : (
               items.map((it) => (
                 <tr key={it.id} className="border-t">
                   <td className="px-4 py-2 text-sm">{it.id}</td>
-                  <td className="px-4 py-2 text-sm">{it.shop_id}</td>
-                  <td className="px-4 py-2 text-sm whitespace-nowrap">{it.shop_uuid}</td>
+                  <td className="px-4 py-2 text-sm whitespace-nowrap">
+                    {it.shop_domain ? (
+                      <a className="link" href={`/shops/${it.shop_id}`}>{it.shop_domain}</a>
+                    ) : (it.shop_uuid || '-')}
+                  </td>
                   <td className="px-4 py-2 text-sm">{it.domain_param || ''}</td>
                   <td className="px-4 py-2 text-sm">{it.uuid_param || ''}</td>
                   <td className="px-4 py-2">

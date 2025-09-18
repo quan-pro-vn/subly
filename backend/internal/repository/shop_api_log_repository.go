@@ -32,7 +32,10 @@ func (r *ShopAPILogRepository) ListByShopID(shopID uint, limit int) ([]model.Sho
 func (r *ShopAPILogRepository) ListByShopIDPaged(shopID uint, page, limit int) ([]model.ShopAPILog, int64, error) {
     if page < 1 { page = 1 }
     if limit <= 0 || limit > 200 { limit = 50 }
-    q := r.db.Model(&model.ShopAPILog{}).Where("shop_id = ?", shopID)
+    q := r.db.Model(&model.ShopAPILog{}).
+        Where("shop_id = ?", shopID).
+        Joins("LEFT JOIN shops ON shops.id = shop_api_logs.shop_id").
+        Select("shop_api_logs.*, shops.domain AS shop_domain")
     var total int64
     if err := q.Count(&total).Error; err != nil { return nil, 0, err }
     var items []model.ShopAPILog
@@ -46,7 +49,9 @@ func (r *ShopAPILogRepository) ListByShopIDPaged(shopID uint, page, limit int) (
 func (r *ShopAPILogRepository) ListAllPaged(page, limit int, domainParam, uuidParam, status *string) ([]model.ShopAPILog, int64, error) {
     if page < 1 { page = 1 }
     if limit <= 0 || limit > 200 { limit = 50 }
-    q := r.db.Model(&model.ShopAPILog{})
+    q := r.db.Model(&model.ShopAPILog{}).
+        Joins("LEFT JOIN shops ON shops.id = shop_api_logs.shop_id").
+        Select("shop_api_logs.*, shops.domain AS shop_domain")
     if domainParam != nil && *domainParam != "" {
         like := "%" + *domainParam + "%"
         q = q.Where("domain_param LIKE ?", like)
