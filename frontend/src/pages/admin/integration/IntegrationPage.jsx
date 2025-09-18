@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, useMemo } from 'react';
 import { Container } from '@/components/common/container';
 import PageTitle from '@/components/common/page-title';
 import {
@@ -10,10 +10,6 @@ import {
 } from '@/components/layouts/layout-1/components/toolbar';
 
 export default function IntegrationPage() {
-  const [apiBase, setApiBase] = useState('https://your-service.example.com/api');
-  const [shopUUID, setShopUUID] = useState('');
-  const [forceDomain, setForceDomain] = useState('');
-
   const pluginContent = useMemo(() => generatePluginContent(), []);
 
   const downloadPlugin = () => {
@@ -40,30 +36,7 @@ export default function IntegrationPage() {
     URL.revokeObjectURL(url);
   };
 
-  const wpConfigSnippet = () => {
-    const lines = [
-      `define('SHOP_CHECK_API_BASE', '${apiBase}');`,
-    ];
-    if (shopUUID.trim()) lines.push(`define('SHOP_CHECK_SHOP_UUID', '${shopUUID.trim()}');`);
-    if (forceDomain.trim()) lines.push(`define('SHOP_CHECK_FORCE_DOMAIN', '${forceDomain.trim()}');`);
-    return lines.join('\n');
-  };
-
-  const copy = async (text) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      alert('Đã sao chép');
-    } catch (_) {
-      // fallback
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
-      alert('Đã sao chép');
-    }
-  };
+  // No extra configuration required
 
   return (
     <Fragment>
@@ -93,37 +66,7 @@ export default function IntegrationPage() {
         <div className="grid gap-6">
           <section className="card">
             <div className="card-header">
-              <h3 className="card-title">Bước 1 — Cấu hình trong wp-config.php</h3>
-            </div>
-            <div className="card-body space-y-4">
-              <div className="grid md:grid-cols-3 gap-3">
-                <div>
-                  <label className="form-label">SHOP_CHECK_API_BASE</label>
-                  <input className="input" value={apiBase} onChange={(e) => setApiBase(e.target.value)} placeholder="https://domain-cua-ban/api" />
-                </div>
-                <div>
-                  <label className="form-label">SHOP_CHECK_SHOP_UUID (tùy chọn)</label>
-                  <input className="input" value={shopUUID} onChange={(e) => setShopUUID(e.target.value)} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
-                </div>
-                <div>
-                  <label className="form-label">SHOP_CHECK_FORCE_DOMAIN (tùy chọn)</label>
-                  <input className="input" value={forceDomain} onChange={(e) => setForceDomain(e.target.value)} placeholder="example.com" />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm text-muted-foreground">Thêm vào ngay phía trên dòng “/* That's all, stop editing! */”</div>
-                  <button type="button" className="btn btn-light btn-sm" onClick={() => copy(wpConfigSnippet())}>Sao chép</button>
-                </div>
-                <pre className="code-block whitespace-pre-wrap break-all p-3 rounded border bg-muted/30 text-xs"><code>{wpConfigSnippet()}</code></pre>
-              </div>
-            </div>
-          </section>
-
-          <section className="card">
-            <div className="card-header">
-              <h3 className="card-title">Bước 2 — Cài MU Plugin</h3>
+              <h3 className="card-title">Bước 1 — Cài MU Plugin</h3>
             </div>
             <div className="card-body space-y-3">
               <ol className="list-decimal ps-5 space-y-1 text-sm">

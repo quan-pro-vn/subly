@@ -37,7 +37,7 @@ export function AppRoutingSetup() {
             </Route>
             <Route path="/shops/:id" element={<ShopDetailPage />} />
             <Route path="/customer-management" element={<CustomerManagementPage />} />
-            <Route path="/api-call-history" element={<ApiHistoryPage />} />
+            <Route path="/call-history-api" element={<ApiHistoryPage />} />
             <Route path="/integration" element={<IntegrationPage />} />
           </Route>
         </Route>
