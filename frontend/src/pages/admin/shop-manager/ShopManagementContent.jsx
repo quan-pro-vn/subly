@@ -7,6 +7,7 @@ import {
   forceDeleteShop as apiForceDeleteShop,
 } from '@/api/shops';
 import { toast } from 'sonner';
+import { renewShop as apiRenewShop } from '@/api/shops';
 import ShopModal from './ShopModal';
 import {
   Pagination,
@@ -92,9 +93,16 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
   const revokeNow = async (id) => {
     if (!window.confirm('Thu hồi: đặt shop hết hạn ngay bây giờ?')) return;
     try {
-      const nowISO = new Date().toISOString();
-      const updated = await apiUpdateShop(id, { expired_at: nowISO });
-      setItems((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      // Backend treats expired if expired_at < now, so set a time slightly in the past
+      const pastISO = new Date(Date.now() - 1000).toISOString();
+      const res = await apiRenewShop(id, { next_expired_at: pastISO });
+      const updated = res?.shop || res; // support both structured and direct response
+      if (updated && updated.id) {
+        setItems((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      } else {
+        // fallback: refresh list
+        fetchItems();
+      }
       toast.success('Đã thu hồi, shop hết hạn ngay', { richColors: true });
     } catch (e) {
       toast.error(e?.response?.data?.error || 'Thu hồi thất bại', {
