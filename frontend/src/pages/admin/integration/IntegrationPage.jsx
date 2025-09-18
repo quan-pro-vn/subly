@@ -84,7 +84,7 @@ export default function IntegrationPage() {
 
           <section className="card">
             <div className="card-header">
-              <h3 className="card-title">Bước 3 — Sử dụng</h3>
+              <h3 className="card-title">Bước 2 — Sử dụng</h3>
             </div>
             <div className="card-body space-y-2 text-sm">
               <ul className="list-disc ps-5 space-y-1">
@@ -92,6 +92,7 @@ export default function IntegrationPage() {
                 <li>REST API: <code className="px-1 rounded bg-muted">GET /wp-json/shop-check/v1/status</code> (thêm <code>?refresh=1</code> để bỏ qua cache)</li>
                 <li>Admin Bar: hiển thị trạng thái “Shop: Valid/Expired/Not Found”.</li>
                 <li>Admin notice: cảnh báo khi hết hạn/không tìm thấy (chỉ admin).</li>
+                <li>Tự động vô hiệu hoá frontend (HTTP 503) nếu trạng thái <code>expired</code> hoặc <code>not_found</code>; WP Admin và trang đăng nhập vẫn truy cập được.</li>
               </ul>
             </div>
           </section>
