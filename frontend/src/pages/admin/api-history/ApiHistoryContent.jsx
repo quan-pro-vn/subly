@@ -11,12 +11,15 @@ export default function ApiHistoryContent() {
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [domainParam, setDomainParam] = useState('');
+  const [uuidParam, setUuidParam] = useState('');
+  const [status, setStatus] = useState('all');
 
   const fetchItems = async () => {
     try {
       setLoading(true);
       setError('');
-      const data = await listAllApiLogs({ page, limit: PAGE_SIZE });
+      const data = await listAllApiLogs({ page, limit: PAGE_SIZE, domain_param: domainParam, uuid_param: uuidParam, status });
       if (data && Array.isArray(data.items)) {
         setItems(data.items);
         setTotal(typeof data.total === 'number' ? data.total : 0);
@@ -34,7 +37,7 @@ export default function ApiHistoryContent() {
     }
   };
 
-  useEffect(() => { fetchItems(); }, [page]);
+  useEffect(() => { fetchItems(); }, [page, domainParam, uuidParam, status]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -47,6 +50,53 @@ export default function ApiHistoryContent() {
     <div className="card">
       <div className="card-header">
         <h3 className="card-title">Lịch sử gọi API</h3>
+      </div>
+      <div className="p-4">
+        <form
+          className="grid grid-cols-1 md:grid-cols-4 gap-3"
+          onSubmit={(e) => { e.preventDefault(); setPage(1); fetchItems(); }}
+        >
+          <div>
+            <label className="form-label text-sm">Domain param</label>
+            <input
+              type="text"
+              className="input"
+              placeholder="vd: example.com"
+              value={domainParam}
+              onChange={(e) => { setDomainParam(e.target.value); setPage(1); }}
+            />
+          </div>
+          <div>
+            <label className="form-label text-sm">UUID param</label>
+            <input
+              type="text"
+              className="input"
+              placeholder="vd: 123e4567-..."
+              value={uuidParam}
+              onChange={(e) => { setUuidParam(e.target.value); setPage(1); }}
+            />
+          </div>
+          <div>
+            <label className="form-label text-sm">Trạng thái</label>
+            <select className="select" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
+              <option value="all">Tất cả</option>
+              <option value="valid">valid</option>
+              <option value="expired">expired</option>
+              <option value="not_found">not_found</option>
+              <option value="unknown">unknown</option>
+            </select>
+          </div>
+          <div className="flex items-end gap-2">
+            <button type="submit" className="btn btn-primary">Lọc</button>
+            <button
+              type="button"
+              className="btn btn-light"
+              onClick={() => { setDomainParam(''); setUuidParam(''); setStatus('all'); setPage(1); }}
+            >
+              Xóa lọc
+            </button>
+          </div>
+        </form>
       </div>
       <div className="card-body p-0 overflow-x-auto">
         {error && (
@@ -157,4 +207,3 @@ function formatDateTime(v) {
   const ss = String(d.getSeconds()).padStart(2, '0');
   return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
 }
-

@@ -60,6 +60,10 @@ export function listShopApiLogs(id, params = {}) {
 }
 
 export function listAllApiLogs(params = {}) {
-  const { page = 1, limit = 50 } = params;
-  return http.get('/api-logs', { params: { page, limit } }).then((r) => r.data);
+  const { page = 1, limit = 50, domain_param, uuid_param, status } = params;
+  const query = { page, limit };
+  if (domain_param) query.domain_param = domain_param;
+  if (uuid_param) query.uuid_param = uuid_param;
+  if (status && status !== 'all') query.status = status;
+  return http.get('/api-logs', { params: query }).then((r) => r.data);
 }

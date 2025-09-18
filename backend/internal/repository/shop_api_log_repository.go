@@ -43,10 +43,21 @@ func (r *ShopAPILogRepository) ListByShopIDPaged(shopID uint, page, limit int) (
 }
 
 // ListAllPaged returns all API logs across shops with pagination
-func (r *ShopAPILogRepository) ListAllPaged(page, limit int) ([]model.ShopAPILog, int64, error) {
+func (r *ShopAPILogRepository) ListAllPaged(page, limit int, domainParam, uuidParam, status *string) ([]model.ShopAPILog, int64, error) {
     if page < 1 { page = 1 }
     if limit <= 0 || limit > 200 { limit = 50 }
     q := r.db.Model(&model.ShopAPILog{})
+    if domainParam != nil && *domainParam != "" {
+        like := "%" + *domainParam + "%"
+        q = q.Where("domain_param LIKE ?", like)
+    }
+    if uuidParam != nil && *uuidParam != "" {
+        like := "%" + *uuidParam + "%"
+        q = q.Where("uuid_param LIKE ?", like)
+    }
+    if status != nil && *status != "" && *status != "all" {
+        q = q.Where("status = ?", *status)
+    }
     var total int64
     if err := q.Count(&total).Error; err != nil { return nil, 0, err }
     var items []model.ShopAPILog

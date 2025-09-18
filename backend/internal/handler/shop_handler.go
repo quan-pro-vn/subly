@@ -261,6 +261,22 @@ func (h *ShopHandler) CheckStatus(c *gin.Context) {
     if err != nil {
         // Return a consistent payload for not-found to simplify integrations
         c.JSON(http.StatusOK, gin.H{"status": "not_found"})
+        // Ensure we still log the attempt even when no shop matched
+        if h.apiLogs != nil {
+            go func() {
+                domainPtr := func() *string { if domain == "" { return nil }; v:=domain; return &v }()
+                uuidPtr := func() *string { if shopUUID == "" { return nil }; v:=shopUUID; return &v }()
+                _ = h.apiLogs.Create(&model.ShopAPILog{
+                    ShopID:      0,
+                    ShopUUID:    "",
+                    DomainParam: domainPtr,
+                    UUIDParam:   uuidPtr,
+                    ClientIP:    c.ClientIP(),
+                    UserAgent:   c.GetHeader("User-Agent"),
+                    Status:      "not_found",
+                })
+            }()
+        }
         return
     }
     now := time.Now()
@@ -288,18 +304,18 @@ func (h *ShopHandler) CheckStatus(c *gin.Context) {
     c.JSON(http.StatusOK, resp)
 
     // log call (best-effort)
-    if h.apiLogs != nil && m != nil {
+    if h.apiLogs != nil {
         go func() {
             domainPtr := func() *string { if domain == "" { return nil }; v:=domain; return &v }()
             uuidPtr := func() *string { if shopUUID == "" { return nil }; v:=shopUUID; return &v }()
             _ = h.apiLogs.Create(&model.ShopAPILog{
-                ShopID:      m.ID,
-                ShopUUID:    m.UUID,
+                ShopID:      func() uint { if m != nil { return m.ID }; return 0 }(),
+                ShopUUID:    func() string { if m != nil { return m.UUID }; return "" }(),
                 DomainParam: domainPtr,
                 UUIDParam:   uuidPtr,
                 ClientIP:    c.ClientIP(),
                 UserAgent:   c.GetHeader("User-Agent"),
-                Status:      resp["status"].(string),
+                Status:      func() string { if s, ok := resp["status"].(string); ok { return s }; return "unknown" }(),
             })
         }()
     }
@@ -342,7 +358,13 @@ func (h *ShopHandler) ListAllAPILogs(c *gin.Context) {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "api logs repository not configured"})
         return
     }
-    items, total, err := h.apiLogs.ListAllPaged(page, limit)
+    var domainParam *string
+    var uuidParam *string
+    var status *string
+    if v := c.Query("domain_param"); v != "" { domainParam = &[]string{v}[0] }
+    if v := c.Query("uuid_param"); v != "" { uuidParam = &[]string{v}[0] }
+    if v := c.Query("status"); v != "" { status = &[]string{v}[0] }
+    items, total, err := h.apiLogs.ListAllPaged(page, limit, domainParam, uuidParam, status)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
