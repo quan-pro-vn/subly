@@ -7,7 +7,8 @@ type ShopAPILog struct {
     ID           uint      `gorm:"primaryKey" json:"id"`
     ShopID       uint      `gorm:"index" json:"shop_id"`
     ShopUUID     string    `gorm:"size:36;index" json:"shop_uuid"`
-    ShopDomain   *string   `gorm:"-" json:"shop_domain,omitempty"`
+    // Derived field from joined shops table: SELECT shops.domain AS shop_domain
+    ShopDomain   *string   `gorm:"->;column:shop_domain" json:"shop_domain,omitempty"`
     DomainParam  *string   `gorm:"size:255" json:"domain_param,omitempty"`
     UUIDParam    *string   `gorm:"size:255" json:"uuid_param,omitempty"`
     ClientIP     string    `gorm:"size:64" json:"client_ip"`
