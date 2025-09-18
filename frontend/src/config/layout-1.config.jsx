@@ -79,6 +79,12 @@ export const MENU_SIDEBAR = [
     path: '/customer-management',
     requireRoles: ['admin'],
   },
+  {
+    title: 'Lịch sử gọi API',
+    icon: FileText,
+    path: '/call-history-api',
+    requireRoles: ['admin'],
+  },
 ];
 
 export const MENU_MEGA = [

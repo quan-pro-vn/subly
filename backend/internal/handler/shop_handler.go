@@ -327,3 +327,25 @@ func (h *ShopHandler) ListAPILogs(c *gin.Context) {
     }
     c.JSON(http.StatusOK, gin.H{ "items": items, "page": page, "limit": limit, "total": total })
 }
+
+// ListAllAPILogs GET /api-logs
+func (h *ShopHandler) ListAllAPILogs(c *gin.Context) {
+    page := 1
+    limit := 50
+    if v := c.Query("page"); v != "" {
+        if p, err := strconv.Atoi(v); err == nil && p > 0 { page = p }
+    }
+    if v := c.Query("limit"); v != "" {
+        if l, err := strconv.Atoi(v); err == nil && l > 0 { limit = l }
+    }
+    if h.apiLogs == nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "api logs repository not configured"})
+        return
+    }
+    items, total, err := h.apiLogs.ListAllPaged(page, limit)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{ "items": items, "page": page, "limit": limit, "total": total })
+}
