@@ -192,6 +192,22 @@ func (h *ShopHandler) RestoreShop(c *gin.Context) {
     c.Status(http.StatusOK)
 }
 
+// RevokeShop POST /shops/:id/revoke
+// Force set expired_at to an immediate past timestamp
+func (h *ShopHandler) RevokeShop(c *gin.Context) {
+    id64, err := strconv.ParseUint(c.Param("id"), 10, 64)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+        return
+    }
+    m, err := h.svc.RevokeNow(uint(id64))
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    c.JSON(http.StatusOK, m)
+}
+
 // RenewShop POST /shops/:id/renew { months, note? }
 func (h *ShopHandler) RenewShop(c *gin.Context) {
     id64, err := strconv.ParseUint(c.Param("id"), 10, 64)

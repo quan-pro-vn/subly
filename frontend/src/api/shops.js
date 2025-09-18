@@ -59,6 +59,10 @@ export function listShopApiLogs(id, params = {}) {
   return http.get(`/shops/${id}/api-logs`, { params: { page, limit } }).then((r) => r.data);
 }
 
+export function revokeShop(id) {
+  return http.post(`/shops/${id}/revoke`).then((r) => r.data);
+}
+
 export function listAllApiLogs(params = {}) {
   const { page = 1, limit = 50, domain_param, uuid_param, status } = params;
   const query = { page, limit };

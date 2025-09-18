@@ -155,6 +155,20 @@ func (s *ShopService) WithRenewalRepo(rr *repository.ShopRenewalRepository) *Sho
     return s
 }
 
+// RevokeNow sets shop to expired immediately (even if previously unlimited)
+func (s *ShopService) RevokeNow(shopID uint) (*model.Shop, error) {
+    m, err := s.shops.FindByID(shopID)
+    if err != nil {
+        return nil, err
+    }
+    past := time.Now().Add(-1 * time.Second)
+    m.ExpiredAt = &past
+    if err := s.shops.Update(m); err != nil {
+        return nil, err
+    }
+    return m, nil
+}
+
 // Renew extends shop expiration by given months and records history
 func (s *ShopService) Renew(shopID uint, months int, performedBy uint, note *string) (*model.Shop, *model.ShopRenewal, error) {
     if months <= 0 {
