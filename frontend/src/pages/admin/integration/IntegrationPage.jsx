@@ -1,4 +1,4 @@
-import { Fragment, useMemo } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Container } from '@/components/common/container';
 import PageTitle from '@/components/common/page-title';
 import {
@@ -10,7 +10,24 @@ import {
 } from '@/components/layouts/layout-1/components/toolbar';
 
 export default function IntegrationPage() {
-  const pluginContent = useMemo(() => generatePluginContent(), []);
+  const [pluginContent, setPluginContent] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState('');
+  useEffect(() => {
+    let ignore = false;
+    (async () => {
+      try {
+        const res = await fetch('/plugins/shop-check.php');
+        const txt = await res.text();
+        if (!ignore) setPluginContent(txt);
+      } catch (e) {
+        if (!ignore) setErr('Không thể tải nội dung plugin');
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    })();
+    return () => { ignore = true; };
+  }, []);
 
   const downloadPlugin = () => {
     const blob = new Blob([pluginContent], { type: 'text/x-php;charset=utf-8' });
@@ -77,7 +94,13 @@ export default function IntegrationPage() {
               </ol>
               <details className="mt-2">
                 <summary className="cursor-pointer text-sm font-medium">Xem nội dung plugin</summary>
-                <pre className="code-block whitespace-pre-wrap break-words p-3 rounded border bg-muted/30 text-xs overflow-auto max-h-96"><code>{pluginContent}</code></pre>
+                {loading ? (
+                  <div className="p-3 text-sm text-muted-foreground">Đang tải nội dung plugin…</div>
+                ) : err ? (
+                  <div className="p-3 text-sm text-red-600">{err}</div>
+                ) : (
+                  <pre className="code-block whitespace-pre-wrap break-words p-3 rounded border bg-muted/30 text-xs overflow-auto max-h-96"><code>{pluginContent}</code></pre>
+                )}
               </details>
             </div>
           </section>
