@@ -64,10 +64,12 @@ export function revokeShop(id) {
 }
 
 export function listAllApiLogs(params = {}) {
-  const { page = 1, limit = 50, domain_param, uuid_param, status } = params;
+  const { page = 1, limit = 50, domain_param, uuid_param, status, from, to } = params;
   const query = { page, limit };
   if (domain_param) query.domain_param = domain_param;
   if (uuid_param) query.uuid_param = uuid_param;
   if (status && status !== 'all') query.status = status;
+  if (from) query.from = from;
+  if (to) query.to = to;
   return http.get('/api-logs', { params: query }).then((r) => r.data);
 }

@@ -14,12 +14,15 @@ export default function ApiHistoryContent() {
   const [domainParam, setDomainParam] = useState('');
   const [uuidParam, setUuidParam] = useState('');
   const [status, setStatus] = useState('all');
+  const todayStr = formatDate(new Date());
+  const [fromDate, setFromDate] = useState(todayStr);
+  const [toDate, setToDate] = useState(todayStr);
 
   const fetchItems = async () => {
     try {
       setLoading(true);
       setError('');
-      const data = await listAllApiLogs({ page, limit: PAGE_SIZE, domain_param: domainParam, uuid_param: uuidParam, status });
+      const data = await listAllApiLogs({ page, limit: PAGE_SIZE, domain_param: domainParam, uuid_param: uuidParam, status, from: fromDate, to: toDate });
       if (data && Array.isArray(data.items)) {
         setItems(data.items);
         setTotal(typeof data.total === 'number' ? data.total : 0);
@@ -37,7 +40,7 @@ export default function ApiHistoryContent() {
     }
   };
 
-  useEffect(() => { fetchItems(); }, [page, domainParam, uuidParam, status]);
+  useEffect(() => { fetchItems(); }, [page, domainParam, uuidParam, status, fromDate, toDate]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -86,12 +89,22 @@ export default function ApiHistoryContent() {
               <option value="unknown">unknown</option>
             </select>
           </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="form-label text-sm">Từ ngày</label>
+              <input type="date" className="input" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setPage(1); }} />
+            </div>
+            <div>
+              <label className="form-label text-sm">Đến ngày</label>
+              <input type="date" className="input" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(1); }} />
+            </div>
+          </div>
           <div className="flex items-end gap-2">
             <button type="submit" className="btn btn-primary">Lọc</button>
             <button
               type="button"
               className="btn btn-light"
-              onClick={() => { setDomainParam(''); setUuidParam(''); setStatus('all'); setPage(1); }}
+              onClick={() => { setDomainParam(''); setUuidParam(''); setStatus('all'); setFromDate(todayStr); setToDate(todayStr); setPage(1); }}
             >
               Xóa lọc
             </button>
@@ -208,4 +221,11 @@ function formatDateTime(v) {
   const mi = String(d.getMinutes()).padStart(2, '0');
   const ss = String(d.getSeconds()).padStart(2, '0');
   return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+}
+
+function formatDate(d) {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 }

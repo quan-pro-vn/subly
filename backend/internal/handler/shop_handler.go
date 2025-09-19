@@ -380,7 +380,28 @@ func (h *ShopHandler) ListAllAPILogs(c *gin.Context) {
     if v := c.Query("domain_param"); v != "" { domainParam = &[]string{v}[0] }
     if v := c.Query("uuid_param"); v != "" { uuidParam = &[]string{v}[0] }
     if v := c.Query("status"); v != "" { status = &[]string{v}[0] }
-    items, total, err := h.apiLogs.ListAllPaged(page, limit, domainParam, uuidParam, status)
+    // optional time range filters: from, to
+    // from/to accept either RFC3339 or YYYY-MM-DD; to is exclusive end boundary if date-only provided
+    var fromTime *time.Time
+    var toTime *time.Time
+    if v := c.Query("from"); v != "" {
+        if t, err := time.Parse(time.RFC3339, v); err == nil {
+            fromTime = &t
+        } else if d, err := time.Parse("2006-01-02", v); err == nil {
+            t := time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, time.UTC)
+            fromTime = &t
+        }
+    }
+    if v := c.Query("to"); v != "" {
+        if t, err := time.Parse(time.RFC3339, v); err == nil {
+            toTime = &t
+        } else if d, err := time.Parse("2006-01-02", v); err == nil {
+            // exclusive next day start (UTC)
+            t := time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, time.UTC).Add(24 * time.Hour)
+            toTime = &t
+        }
+    }
+    items, total, err := h.apiLogs.ListAllPaged(page, limit, domainParam, uuidParam, status, fromTime, toTime)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
