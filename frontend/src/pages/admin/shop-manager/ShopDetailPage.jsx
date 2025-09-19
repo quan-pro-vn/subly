@@ -9,7 +9,7 @@ import {
   ToolbarHeading,
   ToolbarPageTitle,
 } from '@/components/layouts/layout-1/components/toolbar';
-import { getShop, listShopRenewals, renewShop, listShopApiLogs } from '@/api/shops';
+import { getShop, listShopRenewals, renewShop, listShopApiLogs, setShopExpiredAt } from '@/api/shops';
 import ShopCustomersSection from './ShopCustomersSection';
 
 export default function ShopDetailPage() {
@@ -75,6 +75,9 @@ export default function ShopDetailPage() {
   const [renewals, setRenewals] = useState([]);
   const [apiLogs, setApiLogs] = useState([]);
   const [renewing, setRenewing] = useState(false);
+  const [editExpDate, setEditExpDate] = useState('');
+  const [editNote, setEditNote] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const fetchShop = async () => {
     try {
@@ -82,6 +85,19 @@ export default function ShopDetailPage() {
       setError('');
       const data = await getShop(id);
       setShop(data);
+      try {
+        if (data?.expired_at) {
+          const d = new Date(data.expired_at);
+          const y = d.getUTCFullYear();
+          const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+          const day = String(d.getUTCDate()).padStart(2, '0');
+          setEditExpDate(`${y}-${m}-${day}`);
+        } else {
+          setEditExpDate('');
+        }
+      } catch {
+        setEditExpDate('');
+      }
     } catch (e) {
       setError(e?.response?.data?.error || 'Không thể tải thông tin shop');
     } finally {
@@ -136,6 +152,25 @@ export default function ShopDetailPage() {
       alert(e?.response?.data?.error || 'Gia hạn thất bại');
     } finally {
       setRenewing(false);
+    }
+  };
+
+  const onSetExpiredAt = async () => {
+    if (!editExpDate) return alert('Vui lòng chọn ngày hết hạn mới');
+    try {
+      setSavingEdit(true);
+      const payload = {
+        new_expired_at: new Date(editExpDate + 'T00:00:00Z').toISOString(),
+        note: editNote || undefined,
+      };
+      const res = await setShopExpiredAt(id, payload);
+      if (res?.shop) setShop(res.shop);
+      await fetchRenewals();
+      alert('Cập nhật ngày hết hạn thành công');
+    } catch (e) {
+      alert(e?.response?.data?.error || 'Cập nhật thất bại');
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -251,6 +286,39 @@ export default function ShopDetailPage() {
                       disabled={renewing}
                     >
                       {renewing ? 'Đang gia hạn...' : 'Gia hạn'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="card-container">
+              <div className="card-header">
+                <div className="card-title">Chỉnh sửa ngày hết hạn</div>
+              </div>
+              <div className="card-content">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">Ngày hết hạn mới</label>
+                    <input
+                      type="date"
+                      className="input input-sm w-40"
+                      value={editExpDate}
+                      onChange={(e) => setEditExpDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs text-muted-foreground mb-1">Ghi chú</label>
+                    <input
+                      type="text"
+                      className="input input-sm w-full"
+                      placeholder="Ví dụ: Chỉnh sửa thủ công theo yêu cầu"
+                      value={editNote}
+                      onChange={(e) => setEditNote(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <button className="btn btn-sm btn-outline" onClick={onSetExpiredAt} disabled={savingEdit}>
+                      {savingEdit ? 'Đang lưu...' : 'Cập nhật hết hạn'}
                     </button>
                   </div>
                 </div>

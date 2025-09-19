@@ -329,6 +329,32 @@ func (h *ShopHandler) ListRenewals(c *gin.Context) {
     c.JSON(http.StatusOK, items)
 }
 
+// SetExpiredAt POST /shops/:id/expired-at { new_expired_at, note? }
+// Manually set the expired_at field and save a log entry.
+func (h *ShopHandler) SetExpiredAt(c *gin.Context) {
+    id64, err := strconv.ParseUint(c.Param("id"), 10, 64)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+        return
+    }
+    var req struct {
+        NewExpiredAt time.Time `json:"new_expired_at" binding:"required"`
+        Note         *string   `json:"note"`
+    }
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    uidRaw, _ := c.Get("userID")
+    performedBy, _ := uidRaw.(uint)
+    shop, rec, err := h.svc.SetExpiryDate(uint(id64), req.NewExpiredAt, performedBy, req.Note)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"shop": shop, "renewal": rec})
+}
+
 // CheckStatus GET /shops/check?shop_uuid=...|domain=...
 // Returns JSON with status and expiry information without auth.
 func (h *ShopHandler) CheckStatus(c *gin.Context) {

@@ -50,6 +50,11 @@ export function renewShop(id, payload) {
   return http.post(`/shops/${id}/renew`, payload).then((r) => r.data);
 }
 
+export function setShopExpiredAt(id, payload) {
+  // payload: { new_expired_at, note? }
+  return http.post(`/shops/${id}/expired-at`, payload).then((r) => r.data);
+}
+
 export function listShopRenewals(id) {
   return http.get(`/shops/${id}/renewals`).then((r) => r.data);
 }

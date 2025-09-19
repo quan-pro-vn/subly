@@ -282,3 +282,31 @@ func (s *ShopService) ListRenewals(shopID uint) ([]model.ShopRenewal, error) {
     }
     return s.renewals.ListByShopID(shopID)
 }
+
+// SetExpiryDate sets shop's expired_at to an exact date and records a log entry.
+// This is a manual adjustment (not necessarily a renewal by months).
+func (s *ShopService) SetExpiryDate(shopID uint, newExp time.Time, performedBy uint, note *string) (*model.Shop, *model.ShopRenewal, error) {
+    m, err := s.shops.FindByID(shopID)
+    if err != nil {
+        return nil, nil, err
+    }
+    old := m.ExpiredAt
+    m.ExpiredAt = &newExp
+    if err := s.shops.Update(m); err != nil {
+        return nil, nil, err
+    }
+    rec := &model.ShopRenewal{
+        ShopID:       m.ID,
+        Months:       0,
+        OldExpiredAt: old,
+        NewExpiredAt: newExp,
+        Note:         note,
+        PerformedBy:  performedBy,
+    }
+    if s.renewals != nil {
+        if err := s.renewals.Create(rec); err != nil {
+            return nil, nil, err
+        }
+    }
+    return m, rec, nil
+}
