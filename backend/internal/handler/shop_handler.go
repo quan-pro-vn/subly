@@ -1,6 +1,8 @@
 package handler
 
 import (
+    "bytes"
+    "fmt"
     "net/http"
     "strconv"
     "time"
@@ -222,7 +224,7 @@ func (h *ShopHandler) NotifyNotOver1m(c *gin.Context) {
         return
     }
     now := time.Now()
-    items, _, err := h.svc.ListPagedFiltered(1, 2000, "notOver1y", now)
+    items, _, err := h.svc.ListPagedFiltered(1, 2000, "notOver1y")
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
@@ -271,6 +273,9 @@ func httpPostJSON(url string, body []byte) error {
     resp, err := client.Do(req)
     if err != nil { return err }
     defer resp.Body.Close()
+    if resp.StatusCode >= 300 {
+        return fmt.Errorf("slack http status %d", resp.StatusCode)
+    }
     return nil
 }
 

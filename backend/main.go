@@ -113,7 +113,7 @@ type slackPayload struct {
 
 func sendDailySlack(shopSvc *service.ShopService, webhook string, now time.Time) {
     // Collect shops within ±30 days window (notOver1y in repo semantics)
-    items, _, err := shopSvc.ListPagedFiltered(1, 2000, "notOver1y", now)
+    items, _, err := shopSvc.ListPagedFiltered(1, 2000, "notOver1y")
     if err != nil || len(items) == 0 {
         return
     }
@@ -153,6 +153,9 @@ func httpPostJSON(url string, body []byte) error {
     resp, err := client.Do(req)
     if err != nil { return err }
     defer resp.Body.Close()
+    if resp.StatusCode >= 300 {
+        return fmt.Errorf("slack http status %d", resp.StatusCode)
+    }
     return nil
 }
 
