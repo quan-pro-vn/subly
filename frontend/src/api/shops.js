@@ -63,6 +63,10 @@ export function revokeShop(id) {
   return http.post(`/shops/${id}/revoke`).then((r) => r.data);
 }
 
+export function notifyNotOver1mNow() {
+  return http.post('/shops/notify/not-over-1m').then((r) => r.data);
+}
+
 export function listAllApiLogs(params = {}) {
   const { page = 1, limit = 50, domain_param, uuid_param, status, from, to } = params;
   const query = { page, limit };

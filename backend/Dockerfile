@@ -9,7 +9,7 @@ RUN go build -o server .
 
 # Runtime stage
 FROM alpine
-RUN apk add --no-cache wget
+RUN apk add --no-cache wget tzdata
 WORKDIR /app
 COPY --from=build /app/server .
 EXPOSE 8080

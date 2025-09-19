@@ -8,6 +8,8 @@ services:
     restart: unless-stopped  
     environment:
       - DATABASE_DSN=gorm:gorm@tcp(db:3306)/gorm?charset=utf8&parseTime=True&loc=Local
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - APP_TIMEZONE=${APP_TIMEZONE:-Asia/Ho_Chi_Minh}
     # healthcheck:
     #   test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ping | grep -q pong || exit 1"]
     #   interval: 60s

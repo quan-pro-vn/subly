@@ -9,9 +9,11 @@ import (
 
 // Config holds application configuration
 type Config struct {
-	DBDSN        string
-	ClientOrigin string
-	RateLimit    int
+    DBDSN        string
+    ClientOrigin string
+    RateLimit    int
+    SlackWebhook string
+    Timezone     string
 }
 
 // Load reads configuration from environment variables and .env file
@@ -20,11 +22,13 @@ func Load() *Config {
 
 	rateLimit := getInt("AUTH_RATE_LIMIT", 5)
 
-	cfg := &Config{
-		DBDSN:        getEnv("DATABASE_DSN", ""),
-		ClientOrigin: getEnv("CLIENT_ORIGIN", "*"),
-		RateLimit:    rateLimit,
-	}
+    cfg := &Config{
+        DBDSN:        getEnv("DATABASE_DSN", ""),
+        ClientOrigin: getEnv("CLIENT_ORIGIN", "*"),
+        RateLimit:    rateLimit,
+        SlackWebhook: getEnv("SLACK_WEBHOOK_URL", ""),
+        Timezone:     getEnv("APP_TIMEZONE", "+07:00"),
+    }
 	return cfg
 }
 

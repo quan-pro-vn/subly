@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from 'react';
-import { createShop } from '@/api/shops';
+import { createShop, notifyNotOver1mNow } from '@/api/shops';
 import { toast } from 'sonner';
 import { Container } from '@/components/common/container';
 import PageTitle from '@/components/common/page-title';
@@ -68,6 +68,22 @@ export default function ShopManagementBasePage({ filter = 'notOver1y', title = '
               </ToolbarDescription>
             </ToolbarHeading>
             <ToolbarActions>
+              {filter === 'notOver1y' && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await notifyNotOver1mNow();
+                      toast.success('Đã gửi báo cáo Slack', { richColors: true });
+                    } catch (e) {
+                      toast.error(e?.response?.data?.error || 'Gửi báo cáo thất bại', { richColors: true });
+                    }
+                  }}
+                  className="btn btn-sm btn-light"
+                >
+                  Gửi báo cáo Slack ngay
+                </button>
+              )}
               <button type="button" onClick={openCreate} className="btn btn-sm btn-primary">
                 Tạo shop
               </button>

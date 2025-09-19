@@ -16,6 +16,7 @@ import (
 type ShopHandler struct {
     svc *service.ShopService
     apiLogs *repository.ShopAPILogRepository
+    slackWebhook string
 }
 
 func NewShopHandler(s *service.ShopService) *ShopHandler {
@@ -24,6 +25,11 @@ func NewShopHandler(s *service.ShopService) *ShopHandler {
 
 func (h *ShopHandler) WithAPILogRepo(r *repository.ShopAPILogRepository) *ShopHandler {
     h.apiLogs = r
+    return h
+}
+
+func (h *ShopHandler) WithSlackWebhook(url string) *ShopHandler {
+    h.slackWebhook = url
     return h
 }
 
@@ -206,6 +212,66 @@ func (h *ShopHandler) RevokeShop(c *gin.Context) {
         return
     }
     c.JSON(http.StatusOK, m)
+}
+
+// NotifyNotOver1m POST /shops/notify/not-over-1m
+// Sends a Slack message summarizing shops within ±30 days (expired + expiring)
+func (h *ShopHandler) NotifyNotOver1m(c *gin.Context) {
+    if h.slackWebhook == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "slack webhook not configured"})
+        return
+    }
+    now := time.Now()
+    items, _, err := h.svc.ListPagedFiltered(1, 2000, "notOver1y", now)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    var expired []string
+    var expiring []string
+    for _, s := range items {
+        if s.ExpiredAt == nil { continue }
+        days := int(s.ExpiredAt.Sub(now).Hours() / 24)
+        if s.ExpiredAt.After(now) && (s.ExpiredAt.Sub(now).Hours() > 0) {
+            if days < 1 { days = 1 }
+        }
+        if s.ExpiredAt.Before(now) {
+            expired = append(expired, s.Domain+" — hết hạn "+itoa(-days)+" ngày")
+        } else {
+            expiring = append(expiring, s.Domain+" — còn "+itoa(days)+" ngày")
+        }
+    }
+    msg := "Báo cáo — Shop không quá 1 tháng\nNgày: "+ now.Format("2006-01-02") +"\nTổng: "+itoa(len(items))+"\nHết hạn: "+itoa(len(expired))+"\nSắp hết hạn: "+itoa(len(expiring))+"\n\n"
+    if len(expired) > 0 {
+        msg += "Hết hạn:\n" + joinLinesSimple(expired) + "\n\n"
+    }
+    if len(expiring) > 0 {
+        msg += "Sắp hết hạn:\n" + joinLinesSimple(expiring)
+    }
+    if err := httpPostJSON(h.slackWebhook, []byte(`{"text":`+strconv.Quote(msg)+`}`)); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"sent": true, "total": len(items)})
+}
+
+func itoa(i int) string { return strconv.FormatInt(int64(i), 10) }
+
+func joinLinesSimple(lines []string) string {
+    if len(lines) == 0 { return "" }
+    out := lines[0]
+    for i := 1; i < len(lines); i++ { out += "\n" + lines[i] }
+    return out
+}
+
+func httpPostJSON(url string, body []byte) error {
+    req, _ := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
+    req.Header.Set("Content-Type", "application/json")
+    client := &http.Client{ Timeout: 10 * time.Second }
+    resp, err := client.Do(req)
+    if err != nil { return err }
+    defer resp.Body.Close()
+    return nil
 }
 
 // RenewShop POST /shops/:id/renew { months, note? }
