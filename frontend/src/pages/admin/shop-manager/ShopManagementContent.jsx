@@ -26,12 +26,26 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
   const [editing, setEditing] = useState(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [search]);
 
   const fetchItems = async () => {
     try {
       setLoading(true);
       setError('');
-      const data = await listShops({ page, limit: PAGE_SIZE, filter });
+      const data = await listShops({
+        page,
+        limit: PAGE_SIZE,
+        filter,
+        q: debouncedSearch || undefined,
+      });
       if (data && Array.isArray(data.items)) {
         setItems(data.items);
         setTotal(typeof data.total === 'number' ? data.total : 0);
@@ -52,12 +66,12 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
 
   useEffect(() => {
     fetchItems();
-  }, [refreshKey, page, filter]);
+  }, [refreshKey, page, filter, debouncedSearch]);
 
   // Reset to page 1 when filter changes or items refresh
   useEffect(() => {
     setPage(1);
-  }, [filter, refreshKey]);
+  }, [filter, refreshKey, debouncedSearch]);
 
   const filteredItems = items; // server provides filtered and sorted data
 
@@ -169,6 +183,27 @@ const ShopManagementContent = ({ refreshKey = 0, filter = 'all' }) => {
       <div className="card-container mt-2">
         <div className="card-content">
           {error && <div className="text-red-600 mb-2">{error}</div>}
+
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 min-w-[240px]">
+              <input
+                type="text"
+                className="input w-full"
+                placeholder="Tìm theo UUID hoặc domain"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            {search.trim() !== '' && (
+              <button
+                type="button"
+                className="btn btn-sm btn-light"
+                onClick={() => setSearch('')}
+              >
+                Xóa lọc
+              </button>
+            )}
+          </div>
 
           <table className="table">
             <thead>

@@ -1,9 +1,9 @@
 import http from './index';
 
 export function listShops(params = {}) {
-  const { page = 1, limit = 50, filter = 'all' } = params;
+  const { page = 1, limit = 50, filter = 'all', q } = params;
   return http
-    .get('/shops', { params: { page, limit, filter } })
+    .get('/shops', { params: { page, limit, filter, q } })
     .then((r) => r.data);
 }
 
