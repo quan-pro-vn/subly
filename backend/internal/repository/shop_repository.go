@@ -79,10 +79,10 @@ func (r *ShopRepository) ListPagedFiltered(page, limit int, filter string, query
 		// all: no where
 	}
 
-    if query != "" {
-        like := "%" + query + "%"
-        q = q.Where("uuid = ? OR uuid LIKE ? OR domain LIKE ?", query, like, like)
-    }
+	if query != "" {
+		like := "%" + query + "%"
+		q = q.Where("uuid = ? OR uuid LIKE ? OR domain LIKE ?", query, like, like)
+	}
 
 	var total int64
 	if err := q.Count(&total).Error; err != nil {
@@ -196,7 +196,7 @@ func (r *ShopRepository) FindByUUID(uuid string) (*model.Shop, error) {
 }
 
 func (r *ShopRepository) Update(s *model.Shop) error {
-	return r.db.Save(s).Error
+	return r.db.Omit("created_at").Save(s).Error
 }
 
 func (r *ShopRepository) DeleteByID(id uint) error {
