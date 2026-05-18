@@ -76,8 +76,12 @@ func main() {
 		})
 	}
 
-	fmt.Println("Server running at :8080")
-	if err := r.Run(":8080"); err != nil {
+	addr := cfg.Port
+	if !strings.Contains(addr, ":") {
+		addr = ":" + addr
+	}
+	fmt.Printf("Server running at %s\n", addr)
+	if err := r.Run(addr); err != nil {
 		log.Fatalf("server: %v", err)
 	}
 }
