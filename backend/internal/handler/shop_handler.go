@@ -39,6 +39,7 @@ func (h *ShopHandler) WithSlackWebhook(url string) *ShopHandler {
 // CreateShop POST /shops
 func (h *ShopHandler) CreateShop(c *gin.Context) {
 	var req struct {
+		UUID          string       `json:"uuid"`
 		Domain        string       `json:"domain" binding:"required"`
 		ExpiredAt     *time.Time   `json:"expired_at"`
 		PricePerCycle *IntOrString `json:"price_per_cycle"`
@@ -56,7 +57,7 @@ func (h *ShopHandler) CreateShop(c *gin.Context) {
 	if req.CycleMonths != nil {
 		cycle = int(*req.CycleMonths)
 	}
-	m, err := h.svc.Create(req.Domain, req.ExpiredAt, price, cycle)
+	m, err := h.svc.Create(req.Domain, req.UUID, req.ExpiredAt, price, cycle)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

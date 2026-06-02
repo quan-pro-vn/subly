@@ -5,6 +5,17 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 const createSchema = z.object({
+  uuid: z
+    .string()
+    .optional()
+    .refine(
+      (v) =>
+        !v ||
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          v.trim()
+        ),
+      'UUID không hợp lệ'
+    ),
   domain: z
     .string()
     .min(1, 'Vui lòng nhập domain')
@@ -27,7 +38,7 @@ const editSchema = createSchema;
 export default function ShopModal({
   isOpen,
   mode = 'create',
-  defaultValues = { domain: '', expired_at: '', price_per_cycle: 2000000, cycle_months: 12 },
+  defaultValues = { uuid: '', domain: '', expired_at: '', price_per_cycle: 2000000, cycle_months: 12 },
   original = null,
   onClose,
   onSubmit,
@@ -83,6 +94,7 @@ export default function ShopModal({
       payload = changedPayload;
     } else {
       payload = { domain: values.domain };
+      if (values.uuid) payload.uuid = values.uuid.trim();
       // Only allow setting expired_at on create
       payload.expired_at = values.expired_at
         ? new Date(values.expired_at + 'T00:00:00Z').toISOString()
@@ -119,19 +131,35 @@ export default function ShopModal({
           </div>
 
           {mode === 'create' && (
-            <div>
-              <label className="block text-sm mb-1">Ngày hết hạn</label>
-              <input
-                type="date"
-                className="input input-bordered w-full"
-                value={values.expired_at || ''}
-                onChange={(e) => setValue('expired_at', e.target.value)}
-              />
-              {errors.expired_at && (
-                <p className="mt-1 text-xs text-red-600">
-                  {errors.expired_at.message}
-                </p>
-              )}
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm mb-1">UUID</label>
+                <input
+                  className="input input-bordered w-full"
+                  placeholder="Để trống để tự sinh"
+                  {...register('uuid')}
+                />
+                {errors.uuid && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {errors.uuid.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm mb-1">Ngày hết hạn</label>
+                <input
+                  type="date"
+                  className="input input-bordered w-full"
+                  value={values.expired_at || ''}
+                  onChange={(e) => setValue('expired_at', e.target.value)}
+                />
+                {errors.expired_at && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {errors.expired_at.message}
+                  </p>
+                )}
+              </div>
             </div>
           )}
 

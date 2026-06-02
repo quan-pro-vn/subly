@@ -2,6 +2,8 @@ package service
 
 import (
 	"errors"
+	"regexp"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -9,6 +11,8 @@ import (
 	"metronic/internal/model"
 	"metronic/internal/repository"
 )
+
+var uuidPattern = regexp.MustCompile(`(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 
 // ShopService encapsulates business logic for shops
 type ShopService struct {
@@ -20,12 +24,23 @@ func NewShopService(r *repository.ShopRepository) *ShopService {
 	return &ShopService{shops: r}
 }
 
-func (s *ShopService) Create(domain string, expiredAt *time.Time, pricePerCycle int, cycleMonths int) (*model.Shop, error) {
+func (s *ShopService) Create(domain string, uuid string, expiredAt *time.Time, pricePerCycle int, cycleMonths int) (*model.Shop, error) {
+	uuid = strings.TrimSpace(uuid)
 	// Ensure unique domain
 	if _, err := s.shops.FindByDomain(domain); err == nil {
 		return nil, errors.New("domain already exists")
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
+	}
+	if uuid != "" {
+		if !uuidPattern.MatchString(uuid) {
+			return nil, errors.New("uuid is invalid")
+		}
+		if _, err := s.shops.FindByUUID(uuid); err == nil {
+			return nil, errors.New("uuid already exists")
+		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
 	}
 	if pricePerCycle <= 0 {
 		pricePerCycle = 2000000
@@ -33,7 +48,7 @@ func (s *ShopService) Create(domain string, expiredAt *time.Time, pricePerCycle 
 	if cycleMonths <= 0 {
 		cycleMonths = 12
 	}
-	m := &model.Shop{Domain: domain, Active: true, ExpiredAt: expiredAt, PricePerCycle: pricePerCycle, CycleMonths: cycleMonths}
+	m := &model.Shop{UUID: uuid, Domain: domain, Active: true, ExpiredAt: expiredAt, PricePerCycle: pricePerCycle, CycleMonths: cycleMonths}
 	if err := s.shops.Create(m); err != nil {
 		return nil, err
 	}
